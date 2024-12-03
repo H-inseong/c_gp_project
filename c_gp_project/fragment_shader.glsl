@@ -1,5 +1,8 @@
 #version 330 core
 
+
+uniform vec4 aColor;
+
 out vec4 FragColor;
 
 in vec3 FragPos;
@@ -31,4 +34,7 @@ void main() {
     // Combine lighting with object color
     vec3 result = (ambient + diffuse + specular) * Color;
     FragColor = vec4(result, 1.0);
+	if(aColor.w > 0){
+		FragColor = aColor;
+	}
 }
