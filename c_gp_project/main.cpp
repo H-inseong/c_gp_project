@@ -94,8 +94,8 @@ void processInput(unsigned char key, int x, int y) {
 }
 
 void handleMouseWheel(int button, int dir, int x, int y) {
-    if (dir > 0) camera.decreaseFOV();
-    if (dir < 0) camera.increaseFOV();
+    if (dir > 0) camera.processScrollInput(dir);
+    if (dir < 0) camera.processScrollInput(dir);
 }
 
 void mouseCallback(int x, int y) {

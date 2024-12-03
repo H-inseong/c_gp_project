@@ -27,14 +27,17 @@ glm::mat4 Camera::getProjectionMatrix(float aspectRatio) const {
 void Camera::processKeyboardInput(int key, float deltaTime) {
     float velocity = mSpeed * deltaTime;
 
-    if (key == 'W') mPosition += mFront * velocity;
-    if (key == 'w') mPosition += mFront * velocity;
-    if (key == 'S') mPosition -= mFront * velocity;
-    if (key == 's') mPosition -= mFront * velocity;
-    if (key == 'A') mPosition -= mRight * velocity;
-    if (key == 'a') mPosition -= mRight * velocity;
-    if (key == 'D') mPosition += mRight * velocity;
-    if (key == 'd') mPosition += mRight * velocity;
+    glm::vec3 frontXZ = glm::normalize(glm::vec3(mFront.x, 0.0f, mFront.z));
+    glm::vec3 rightXZ = glm::normalize(glm::vec3(mRight.x, 0.0f, mRight.z));
+
+    if (key == 'W') mPosition += frontXZ * velocity;
+    if (key == 'w') mPosition += frontXZ * velocity;
+    if (key == 'S') mPosition -= frontXZ * velocity;
+    if (key == 's') mPosition -= frontXZ * velocity;
+    if (key == 'A') mPosition -= rightXZ * velocity;
+    if (key == 'a') mPosition -= rightXZ * velocity;
+    if (key == 'D') mPosition += rightXZ * velocity;
+    if (key == 'd') mPosition += rightXZ * velocity;
 }
 
 void Camera::processMouseMovement(float xOffset, float yOffset) {
@@ -49,7 +52,6 @@ void Camera::processMouseMovement(float xOffset, float yOffset) {
 
     updateCameraVectors();
 }
-
 
 void Camera::processScrollInput(float yOffset) {
     yOffset > 0 ? increaseFOV() : decreaseFOV();
