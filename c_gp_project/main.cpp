@@ -60,10 +60,23 @@ void initBackground() {
 
 
 void processInput(unsigned char key, int x, int y) {
+
+    if (key == 'W') camera.processKeyboardInput(key, deltaTime);
     if (key == 'w') camera.processKeyboardInput(key, deltaTime);
+    if (key == 'S') camera.processKeyboardInput(key, deltaTime);
     if (key == 's') camera.processKeyboardInput(key, deltaTime);
+    if (key == 'A') camera.processKeyboardInput(key, deltaTime);
     if (key == 'a') camera.processKeyboardInput(key, deltaTime);
+    if (key == 'D') camera.processKeyboardInput(key, deltaTime);
     if (key == 'd') camera.processKeyboardInput(key, deltaTime);
+
+    if (key == '-') camera.decreaseSensitivity();
+    if (key == '_') camera.decreaseSensitivity();
+    if (key == '+') camera.increaseSensitivity();
+    if (key == '=') camera.increaseSensitivity();
+
+    if (key == 'q') exit(0);
+    if (key == 'Q') exit(0);
 }
 
 void mouseCallback(int x, int y) {
@@ -105,10 +118,12 @@ void render() {
     // 조명 및 색상 설정
     shaderProgram->setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
     shaderProgram->setVec3("viewPos", camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
-    shaderProgram->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+    shaderProgram->setVec3("lightColor", 2.0f, 2.0f, 2.0f);
 
     glm::mat4 model = glm::mat4(1.0f);
+    model = glm::scale(model, glm::vec3(3.0));
     shaderProgram->setMat4("model", glm::value_ptr(model));
+    
 
     // 바닥 렌더링
     glBindVertexArray(VAO);

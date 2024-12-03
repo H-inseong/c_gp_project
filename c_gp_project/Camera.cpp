@@ -26,10 +26,15 @@ glm::mat4 Camera::getProjectionMatrix(float aspectRatio) const {
 
 void Camera::processKeyboardInput(int key, float deltaTime) {
     float velocity = mSpeed * deltaTime;
+
     if (key == 'W') mPosition += mFront * velocity;
+    if (key == 'w') mPosition += mFront * velocity;
     if (key == 'S') mPosition -= mFront * velocity;
+    if (key == 's') mPosition -= mFront * velocity;
     if (key == 'A') mPosition -= mRight * velocity;
+    if (key == 'a') mPosition -= mRight * velocity;
     if (key == 'D') mPosition += mRight * velocity;
+    if (key == 'd') mPosition += mRight * velocity;
 }
 
 void Camera::processMouseMovement(float xOffset, float yOffset) {
