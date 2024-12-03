@@ -13,6 +13,10 @@ const int SCREEN_HEIGHT = 1080;
 
 GLuint VAO, VBO;
 Shader* shaderProgram;
+
+// 다른 셰이더 필요시
+//Shader* sec_shaderProgram;
+
 Camera camera(glm::vec3(0.0f, 2.0f, 0.0f));
 
 float deltaTime = 0.0f;
@@ -60,23 +64,33 @@ void initBackground() {
 
 
 void processInput(unsigned char key, int x, int y) {
-
-    if (key == 'W') camera.processKeyboardInput(key, deltaTime);
-    if (key == 'w') camera.processKeyboardInput(key, deltaTime);
-    if (key == 'S') camera.processKeyboardInput(key, deltaTime);
-    if (key == 's') camera.processKeyboardInput(key, deltaTime);
-    if (key == 'A') camera.processKeyboardInput(key, deltaTime);
-    if (key == 'a') camera.processKeyboardInput(key, deltaTime);
-    if (key == 'D') camera.processKeyboardInput(key, deltaTime);
-    if (key == 'd') camera.processKeyboardInput(key, deltaTime);
-
-    if (key == '-') camera.decreaseSensitivity();
-    if (key == '_') camera.decreaseSensitivity();
-    if (key == '+') camera.increaseSensitivity();
-    if (key == '=') camera.increaseSensitivity();
-
-    if (key == 'q') exit(0);
-    if (key == 'Q') exit(0);
+    switch (key)
+    {
+    case 'W':
+    case 'w':
+    case 'S':
+    case 's':
+    case 'A':
+    case 'a':
+    case 'D':
+    case 'd':
+        camera.processKeyboardInput(key, deltaTime);
+        break;
+    case '-':
+    case '_':
+        camera.decreaseSensitivity();
+        break;
+    case '+':
+    case '=':
+        camera.increaseSensitivity();
+        break;
+    case 'q':
+    case 'Q':
+        exit(0);
+        break;
+    default:
+        break;
+    }
 }
 
 void handleMouseWheel(int button, int dir, int x, int y) {
@@ -185,6 +199,11 @@ int main(int argc, char** argv) {
     glEnable(GL_DEPTH_TEST);
 
     shaderProgram = new Shader("vertex_shader.glsl", "fragment_shader.glsl");
+
+    //다른 셰이더 필요시 
+    //sec_shaderProgram = new Shader("sec_vertex_shader.glsl", "sec_fragment_shader.glsl");
+
+
     initBackground();
 
     glutDisplayFunc(render);
