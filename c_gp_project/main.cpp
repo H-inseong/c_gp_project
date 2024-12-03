@@ -13,7 +13,7 @@ const int SCREEN_HEIGHT = 1080;
 
 GLuint VAO, VBO;
 Shader* shaderProgram;
-Camera camera(glm::vec3(0.0f, 0.0f, 5.0f));
+Camera camera(glm::vec3(0.0f, 2.0f, 0.0f));
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -29,14 +29,12 @@ void initBackground() {
     float vertices[] = {
         // Positions          // Normals          // Colors
         -5.0f,  0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
+        -5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
+         5.0f,  0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
+
          5.0f,  0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
          5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
         -5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f
-    };
-
-    unsigned int indices[] = {
-        0, 1, 2,
-        2, 3, 0
     };
 
     glGenVertexArrays(1, &VAO);
@@ -108,14 +106,13 @@ void render() {
     shaderProgram->setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
     shaderProgram->setVec3("viewPos", camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
     shaderProgram->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-    shaderProgram->setVec3("objectColor", 0.6f, 0.7f, 0.8f);
 
     glm::mat4 model = glm::mat4(1.0f);
     shaderProgram->setMat4("model", glm::value_ptr(model));
 
     // ¹Ù´Ú ·»´õ¸µ
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 
     glutSwapBuffers();
