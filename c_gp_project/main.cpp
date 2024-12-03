@@ -112,16 +112,30 @@ void render() {
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
 
     shaderProgram->use();
+    // vertex_shader의 uniform 변수 view에   view, 즉  camera.getViewMatrix() 의 행렬의 값을 전달 
     shaderProgram->setMat4("view", glm::value_ptr(view));
+
+    // vertex_shader의 uniform 변수 projection에 perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f); 의 행렬의 값을 전달 
     shaderProgram->setMat4("projection", glm::value_ptr(projection));
 
     // 조명 및 색상 설정
+
+    // fragment_shader의 uniform 변수 lightPos에  lightPos.x, lightPos.y, lightPos.z 값을 전달
     shaderProgram->setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
+
+
+    // fragment_shader의 uniform 변수  viewPos에 camera.getPosition().x, camera.getPosition().y, camera.getPosition().z 값을 전달
     shaderProgram->setVec3("viewPos", camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
+
+
+    // fragment_shader의 uniform 변수  lightColor에 2.0f, 2.0f, 2.0f 값을 전달
     shaderProgram->setVec3("lightColor", 2.0f, 2.0f, 2.0f);
+
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::scale(model, glm::vec3(3.0));
+
+    // vertex_shader의 uniform 변수 model에 model의 행렬의 값을 전달
     shaderProgram->setMat4("model", glm::value_ptr(model));
     
 
