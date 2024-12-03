@@ -79,7 +79,6 @@ void Camera::updateCameraVectors() {
 
     // Right 벡터 계산 (Up과 Front의 외적)
     mRight = glm::normalize(glm::cross(mFront, glm::vec3(0.0f, 1.0f, 0.0f)));
-
     // Up 벡터 재계산 (Right와 Front의 외적)
     mUp = glm::normalize(glm::cross(mRight, mFront));
 }

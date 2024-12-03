@@ -28,10 +28,10 @@ glm::vec3 lightPos(1.0f, 1.0f, 2.0f);
 void initBackground() {
     float vertices[] = {
         // Positions          // Normals          // Colors
-        -5.0f,  0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   1.0f, 0.0f, 0.0f, // Red
-         5.0f,  0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 1.0f, 0.0f, // Green
-         5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f, // Blue
-        -5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   1.0f, 1.0f, 0.0f  // Yellow
+        -5.0f,  0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
+         5.0f,  0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
+         5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
+        -5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f
     };
 
     unsigned int indices[] = {
@@ -62,7 +62,6 @@ void initBackground() {
 
 
 void processInput(unsigned char key, int x, int y) {
-    float cameraSpeed = 2.5f * deltaTime;
     if (key == 'w') camera.processKeyboardInput(key, deltaTime);
     if (key == 's') camera.processKeyboardInput(key, deltaTime);
     if (key == 'a') camera.processKeyboardInput(key, deltaTime);
