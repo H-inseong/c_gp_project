@@ -1,8 +1,5 @@
-#include "Shader.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
+#include "pch.h"
+
 
 Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) {
     std::string vertexCode = loadShaderSource(vertexPath);

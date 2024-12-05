@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Camera.h"
 
 Camera::Camera(glm::vec3 position)

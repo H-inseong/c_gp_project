@@ -1,15 +1,4 @@
-#include <GL/glew.h>
-#include <GL/freeglut.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <iostream>
-
-#include "Shader.h"
-#include "Camera.h"
-
-const int SCREEN_WIDTH = 1920;
-const int SCREEN_HEIGHT = 1080;
+#include "pch.h"
 
 GLuint VAO, VBO;
 Shader* shaderProgram;
@@ -19,6 +8,8 @@ Shader* shaderProgram;
 
 Camera camera(glm::vec3(0.0f, 2.0f, 0.0f));
 
+Crosshair mCrosshair;
+
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
@@ -27,7 +18,7 @@ float lastX = SCREEN_WIDTH / 2.0f;
 float lastY = SCREEN_HEIGHT / 2.0f;
 
 
-glm::vec3 lightPos(1.0f, 1.0f, 2.0f);
+glm::vec3 lightPos(1.0f, 1.0f, 1.0f);
 
 void initBackground() {
     float vertices[] = {
@@ -36,9 +27,9 @@ void initBackground() {
         -5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
          5.0f,  0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
 
+         5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f, 
          5.0f,  0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-         5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-        -5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f
+        -5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
     };
 
     glGenVertexArrays(1, &VAO);
@@ -162,16 +153,15 @@ void render() {
     shaderProgram->setVec3("lightColor", 2.0f, 2.0f, 2.0f);
 
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(3.0));
-
-    // vertex_shader의 uniform 변수 model에 model의 행렬의 값을 전달
     shaderProgram->setMat4("model", glm::value_ptr(model));
     
-
     // 바닥 렌더링
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
+
+    //mGun.draw(camera.getViewMatrix());
+    mCrosshair.draw();
 
     glutSwapBuffers();
 }
@@ -197,7 +187,8 @@ int main(int argc, char** argv) {
     }
 
     glEnable(GL_DEPTH_TEST);
-
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
     shaderProgram = new Shader("vertex_shader.glsl", "fragment_shader.glsl");
 
     //다른 셰이더 필요시 
@@ -205,6 +196,9 @@ int main(int argc, char** argv) {
 
 
     initBackground();
+   
+    mCrosshair.init("crosshair2.png");
+
 
     glutDisplayFunc(render);
     glutIdleFunc(update);
