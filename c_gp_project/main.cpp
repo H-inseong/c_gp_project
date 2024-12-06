@@ -20,6 +20,8 @@ float lastY = SCREEN_HEIGHT / 2.0f;
 
 glm::vec3 lightPos(1.0f, 1.0f, 1.0f);
 
+void TimerFunction(int value);
+
 void initBackground() {
     float vertices[] = {
         // Positions          // Normals          // Colors
@@ -78,6 +80,9 @@ void processInput(unsigned char key, int x, int y) {
     case 'q':
     case 'Q':
         exit(0);
+        break;
+    case 'r':
+        TargetSpawn(rand() % 3, 16, 0, 0, 0, 1);
         break;
     default:
         break;
@@ -154,14 +159,122 @@ void render() {
 
     glm::mat4 model = glm::mat4(1.0f);
     shaderProgram->setMat4("model", glm::value_ptr(model));
-    
+
     // 바닥 렌더링
+
+    //shaderProgram->setVec4("FullBrightColor")
+    shaderProgram->setVec4("FullBrightColor", 0.0f, 0.0f, 0.0f, -1.0f);
+
+    glFrontFace(GL_CCW);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
 
+
+    glEnable(GL_CULL_FACE);
+    qobj = gluNewQuadric();
+    gluQuadricDrawStyle(qobj, GLU_FILL);
+    //gluQuadricDrawStyle(qobj, GLU_LINE);
+
+    //GLU_FILL | 솔리드스타일 / GLU_LINE | 와이어프레임 / GLU_SILHOUETTE | 선으로외부모서리만 / GLU_POINT | 점
+    gluQuadricNormals(qobj, GLU_SMOOTH);
+    gluQuadricOrientation(qobj, GLU_OUTSIDE);
+    for (int i = 0; i < TargetCnt; i++) {
+        if (TargetList[i].Active) {
+            glFrontFace(GL_CW);
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(0, 2, -4));
+
+            if (TargetList[i].Hit && TargetList[i].DeathTime > 4) {
+                model = glm::translate(model, glm::vec3(TargetList[i].x,
+                    TargetList[i].y + ((4.0f - TargetList[i].DeathTime) / 60.0f),
+                    TargetList[i].z));
+            }
+            else {
+                model = glm::translate(model, glm::vec3(TargetList[i].x, TargetList[i].y, TargetList[i].z));
+            }
+
+            model = glm::scale(model, glm::vec3(TargetList[i].size, TargetList[i].size, TargetList[i].size));
+            shaderProgram->setMat4("model", glm::value_ptr(model));
+
+            for (int j = 0; j < TargetList[i].RangeStep; j++) {
+                float TargetSclae = (float)(TargetList[i].RangeStep - j) / (float)TargetList[i].RangeStep;
+                float slotScore =
+                    ScoreCaculate(TargetList[i].score, TargetList[i].RangeStep, j)
+                    - (TargetList[i].LiveTime / 4.0f);
+
+                if (TargetList[i].Hit && TargetList[i].hitRange <= j) {
+                    float HitScore =
+                        ScoreCaculate(TargetList[i].score, TargetList[i].RangeStep, TargetList[i].Hit)
+                        - (TargetList[i].LiveTime / 4.0f);
+                    if (TargetList[i].hitRange < j)
+                        shaderProgram->setVec4("FullBrightColor",
+                            ScoreToColor(HitScore, 50, 0, 25),
+                            ScoreToColor(HitScore, 25, 0, 25),
+                            ScoreToColor(HitScore, 50, 0, 25),
+                            1.0f);
+                    else
+                        shaderProgram->setVec4("FullBrightColor", 0.0f, 1.0f, 0.0f, 1.0f);
+                }
+                else {
+                    if (slotScore <= -10.0f) {
+                        TargetSclae = -1;
+                    }
+                    else if (slotScore < 0) {
+                        TargetSclae = ((float)(TargetList[i].RangeStep - j) + slotScore / 10.0f) / (float)TargetList[i].RangeStep;
+                    }
+
+                    switch (TargetList[i].Type)
+                    {
+                    case 1:
+                        shaderProgram->setVec4("FullBrightColor",
+                            1.0f,
+                            ScoreToColor(slotScore, 10, 0, 15),
+                            ScoreToColor(slotScore, 20, 0, 15),
+                            ScoreToColor(slotScore, 0, 0, 15)
+                        );
+                        break;
+                    case 2:
+                        shaderProgram->setVec4("FullBrightColor",
+                            ScoreToColor(slotScore, 20, 0, 15),
+                            ScoreToColor(slotScore, 10, 0, 15),
+                            1.0f,
+                            ScoreToColor(slotScore, 0, 0, 15)
+                        );
+                        break;
+                    default:
+                        shaderProgram->setVec4("FullBrightColor",
+                            ScoreToColor(slotScore, -10, 20),
+                            ScoreToColor(slotScore, 10, 30),
+                            ScoreToColor(slotScore, 20),
+                            ScoreToColor(slotScore, 0)
+                        );
+                        break;
+                    }
+                }
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+                if (TargetList[i].Hit && TargetList[i].hitRange > j) {
+                    if (TargetList[i].DeathTime < 4) {
+                        float StepScale = j + ((TargetList[i].hitRange - j) * (TargetList[i].DeathTime / 4.0f));
+                        TargetSclae = (float)(TargetList[i].RangeStep - StepScale) / (float)TargetList[i].RangeStep;
+                        gluSphere(qobj, TargetSclae, 16, 8);
+                    }
+                }
+                else if (TargetSclae > 0) {
+                    gluSphere(qobj, TargetSclae, 16, 8);
+                }
+                glDisable(GL_BLEND);
+            }
+        }
+    }
+
+
+    glBindVertexArray(0);
     //mGun.draw(camera.getViewMatrix());
     mCrosshair.draw();
+
 
     glutSwapBuffers();
 }
@@ -175,6 +288,8 @@ void update() {
 }
 
 int main(int argc, char** argv) {
+    TargetSpawn(0, 16, 0, 4, 0, 1);
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -208,8 +323,17 @@ int main(int argc, char** argv) {
     keepMouseCentered();
     glutSetCursor(GLUT_CURSOR_NONE);
 
+    glutTimerFunc(25, TimerFunction, 1);
+
     glutMainLoop();
 
     delete shaderProgram;
     return 0;
+}
+
+void TimerFunction(int value)
+{
+    TargetTime();
+    glutPostRedisplay();
+    glutTimerFunc(25, TimerFunction, 1);
 }

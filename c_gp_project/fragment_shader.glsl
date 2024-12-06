@@ -1,7 +1,7 @@
 #version 330 core
 
 
-uniform vec4 aColor;
+uniform vec4 FullBrightColor;
 
 out vec4 FragColor;
 
@@ -30,11 +30,11 @@ void main() {
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     vec3 specular = specularStrength * spec * lightColor;
-
+    
     // Combine lighting with object color
     vec3 result = (ambient + diffuse + specular) * Color;
     FragColor = vec4(result, 1.0);
-	if(aColor.w > 0){
-		FragColor = aColor;
+	if(FullBrightColor.w > 0){
+		FragColor = FullBrightColor;
 	}
 }

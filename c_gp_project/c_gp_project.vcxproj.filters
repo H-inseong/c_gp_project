@@ -36,6 +36,9 @@
     <ClCompile Include="Gun.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Target.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="vertex_shader.glsl" />
@@ -55,6 +58,9 @@
     </ClInclude>
     <ClInclude Include="pch.h" />
     <ClInclude Include="Gun.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Target.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
