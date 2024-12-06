@@ -1,8 +1,5 @@
-#include "Shader.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
+#include "pch.h"
+
 
 Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) {
     std::string vertexCode = loadShaderSource(vertexPath);
@@ -54,6 +51,7 @@ void Shader::setVec3(const std::string& name, float x, float y, float z) const {
 void Shader::setMat4(const std::string& name, const float* value) const {
     glUniformMatrix4fv(glGetUniformLocation(mProgramID, name.c_str()), 1, GL_FALSE, value);
 }
+
 
 std::string Shader::loadShaderSource(const std::string& filePath) const {
     std::ifstream shaderFile(filePath);
