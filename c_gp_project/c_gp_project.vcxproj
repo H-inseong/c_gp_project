@@ -144,12 +144,15 @@
     </ClCompile>
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="stb_image.cpp" />
+    <ClCompile Include="Target.cpp" />
     <ClCompile Include="tiny_obj_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="crosshair_fragment_shader.glsl" />
     <None Include="crosshair_vertex_shader.glsl" />
     <None Include="fragment_shader.glsl" />
+    <None Include="target_fragment_shader.glsl" />
+    <None Include="target_vertex_shader.glsl" />
     <None Include="vertex_shader.glsl" />
   </ItemGroup>
   <ItemGroup>
@@ -159,6 +162,7 @@
     <ClInclude Include="Gun.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Target.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

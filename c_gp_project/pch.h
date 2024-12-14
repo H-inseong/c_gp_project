@@ -28,5 +28,6 @@
 #include "Gun.h"
 #include "Crosshair.h"
 #include "background.h"
+#include "Target.h"
 
 #endif // PCH_H

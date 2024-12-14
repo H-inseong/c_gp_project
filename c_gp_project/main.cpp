@@ -2,8 +2,9 @@
 
 GLuint VAO, VBO;
 Shader* shaderProgram;
+Shader* target_shaderProgram;
 
-Camera camera(glm::vec3(0.0f, 3.0f, 0.0f));
+Camera camera(glm::vec3(0.0f, 3.0f, 10.0f));
 Background mBackground;
 Crosshair mCrosshair;
 Gun mGun;
@@ -22,6 +23,14 @@ bool keys[256] = { false };
 
 void keyDown(unsigned char key, int x, int y) {
     keys[key] = true;
+    switch (key)
+    {
+    case 'r':
+        TargetSpawn(rand() % 3, 16, 0, 0, 0, 1);
+        break;
+    default:
+        break;
+    }
 }
 void keyUp(unsigned char key, int x, int y) {
     keys[key] = false;
@@ -112,6 +121,7 @@ void keepMouseCentered() {
 }
 
 void render() {
+    glFrontFace(GL_CCW);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
@@ -136,7 +146,7 @@ void render() {
 
     {
         glm::mat4 backgroundModel = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f));
-        backgroundModel = glm::translate(backgroundModel, glm::vec3(0.0f, 0.0f, 2.0f));
+        backgroundModel = glm::translate(backgroundModel, glm::vec3(0.0f, 0.0f, 5.0f));
         shaderProgram->setMat4("model", glm::value_ptr(backgroundModel));
         mBackground.draw(view, projection);
     }
@@ -168,6 +178,113 @@ void render() {
         mGun.draw(view, projection);
     }
     mCrosshair.draw();
+
+    target_shaderProgram->use();
+    target_shaderProgram->setMat4("view", glm::value_ptr(view));
+    target_shaderProgram->setMat4("projection", glm::value_ptr(projection));
+    target_shaderProgram->setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
+    target_shaderProgram->setVec3("viewPos", camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
+    target_shaderProgram->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+
+    glEnable(GL_CULL_FACE);
+    qobj = gluNewQuadric();
+    gluQuadricDrawStyle(qobj, GLU_FILL);
+    //gluQuadricDrawStyle(qobj, GLU_LINE);
+
+    //GLU_FILL | 솔리드스타일 / GLU_LINE | 와이어프레임 / GLU_SILHOUETTE | 선으로외부모서리만 / GLU_POINT | 점
+    gluQuadricNormals(qobj, GLU_SMOOTH);
+    gluQuadricOrientation(qobj, GLU_OUTSIDE);
+    for (int i = 0; i < TargetCnt; i++) {
+        if (TargetList[i].Active) {
+            glFrontFace(GL_CW);
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(0, 2, -4));
+
+            if (TargetList[i].Hit && TargetList[i].DeathTime > 4) {
+                model = glm::translate(model, glm::vec3(TargetList[i].x,
+                    TargetList[i].y + ((4.0f - TargetList[i].DeathTime) / 60.0f),
+                    TargetList[i].z));
+            }
+            else {
+                model = glm::translate(model, glm::vec3(TargetList[i].x, TargetList[i].y, TargetList[i].z));
+            }
+
+            model = glm::scale(model, glm::vec3(TargetList[i].size, TargetList[i].size, TargetList[i].size));
+            target_shaderProgram->setMat4("model", glm::value_ptr(model));
+
+            for (int j = 0; j < TargetList[i].RangeStep; j++) {
+                float TargetSclae = (float)(TargetList[i].RangeStep - j) / (float)TargetList[i].RangeStep;
+                float slotScore =
+                    ScoreCaculate(TargetList[i].score, TargetList[i].RangeStep, j)
+                    - (TargetList[i].LiveTime / 4.0f);
+
+                if (TargetList[i].Hit && TargetList[i].hitRange <= j) {
+                    float HitScore =
+                        ScoreCaculate(TargetList[i].score, TargetList[i].RangeStep, TargetList[i].Hit)
+                        - (TargetList[i].LiveTime / 4.0f);
+                    if (TargetList[i].hitRange < j)
+                        target_shaderProgram->setVec4("FullBrightColor",
+                            ScoreToColor(HitScore, 50, 0, 25),
+                            ScoreToColor(HitScore, 25, 0, 25),
+                            ScoreToColor(HitScore, 50, 0, 25),
+                            1.0f);
+                    else
+                        target_shaderProgram->setVec4("FullBrightColor", 0.0f, 1.0f, 0.0f, 1.0f);
+                }
+                else {
+                    if (slotScore <= -10.0f) {
+                        TargetSclae = -1;
+                    }
+                    else if (slotScore < 0) {
+                        TargetSclae = ((float)(TargetList[i].RangeStep - j) + slotScore / 10.0f) / (float)TargetList[i].RangeStep;
+                    }
+
+                    switch (TargetList[i].Type)
+                    {
+                    case 1:
+                        target_shaderProgram->setVec4("FullBrightColor",
+                            1.0f,
+                            ScoreToColor(slotScore, 10, 0, 15),
+                            ScoreToColor(slotScore, 20, 0, 15),
+                            ScoreToColor(slotScore, 0, 0, 15)
+                        );
+                        break;
+                    case 2:
+                        target_shaderProgram->setVec4("FullBrightColor",
+                            ScoreToColor(slotScore, 20, 0, 15),
+                            ScoreToColor(slotScore, 10, 0, 15),
+                            1.0f,
+                            ScoreToColor(slotScore, 0, 0, 15)
+                        );
+                        break;
+                    default:
+                        target_shaderProgram->setVec4("FullBrightColor",
+                            ScoreToColor(slotScore, -10, 20),
+                            ScoreToColor(slotScore, 10, 30),
+                            ScoreToColor(slotScore, 20),
+                            ScoreToColor(slotScore, 0)
+                        );
+                        break;
+                    }
+                }
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+                if (TargetList[i].Hit && TargetList[i].hitRange > j) {
+                    if (TargetList[i].DeathTime < 4) {
+                        float StepScale = j + ((TargetList[i].hitRange - j) * (TargetList[i].DeathTime / 4.0f));
+                        TargetSclae = (float)(TargetList[i].RangeStep - StepScale) / (float)TargetList[i].RangeStep;
+                        gluSphere(qobj, TargetSclae, 16, 8);
+                    }
+                }
+                else if (TargetSclae > 0) {
+                    gluSphere(qobj, TargetSclae, 16, 8);
+                }
+                glDisable(GL_BLEND);
+            }
+        }
+    }
 
     glutSwapBuffers();
 }
@@ -203,6 +320,7 @@ int main(int argc, char** argv) {
     glCullFace(GL_BACK);
 
     shaderProgram = new Shader("vertex_shader.glsl", "fragment_shader.glsl");
+    target_shaderProgram = new Shader("target_vertex_shader.glsl", "target_fragment_shader.glsl");
 
     mCrosshair.init();
     mGun.init("Resource\\Gun.obj", "Resource\\Gun.jpg");

@@ -54,10 +54,13 @@ void Shader::setVec3(const std::string& name, float x, float y, float z) const {
     glUniform3f(glGetUniformLocation(mProgramID, name.c_str()), x, y, z);
 }
 
+void Shader::setVec4(const std::string& name, float x, float y, float z, float w) const {
+    glUniform4f(glGetUniformLocation(mProgramID, name.c_str()), x, y, z, w);
+}
+
 void Shader::setMat4(const std::string& name, const float* value) const {
     glUniformMatrix4fv(glGetUniformLocation(mProgramID, name.c_str()), 1, GL_FALSE, value);
 }
-
 
 std::string Shader::loadShaderSource(const std::string& filePath) const {
     std::ifstream shaderFile(filePath);
