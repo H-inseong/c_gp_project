@@ -65,6 +65,7 @@ void mouseButtonCallback(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON) {
         if (state == GLUT_DOWN) {
             leftMousePressed = true;
+            PlaySound(L"Resource\\gunshot.wav", NULL, SND_FILENAME | SND_ASYNC);
         }
         else if (state == GLUT_UP) {
             leftMousePressed = false;

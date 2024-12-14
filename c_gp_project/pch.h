@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <vector>
 #include <map>
+#include <windows.h>
 
 // OpenGL
 #include <GL/glew.h>
