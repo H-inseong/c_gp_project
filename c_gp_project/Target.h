@@ -4,10 +4,10 @@ struct Target {
 	int RangeStep = 3, hitRange = 0, Type = 0;
 	float x = 0.0f, y = 0.0f, z = 0.0f,
 		speedx = 0.0f, speedy = 0.0f, speedz = 0.0f,
-		score = 1.0f, size = 0.25f, LiveTime = 0.0f, DeathTime = 0.0f;
+		score = 1.0f, size = 0.2f, LiveTime = 0.0f, DeathTime = 0.0f;
 };
 
-extern Target TargetList[16];
+extern Target tList[16];
 static int TargetCnt = 16;
 
 extern GLUquadricObj* qobj;

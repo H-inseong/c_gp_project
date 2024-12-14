@@ -1,7 +1,7 @@
 #include "Target.h"
 #include "pch.h"
 
-Target TargetList[16];
+Target tList[16];
 
 GLUquadricObj* qobj;
 
@@ -127,31 +127,31 @@ for (int i = 0; i < TargetCnt; i++) {
 
 void TargetTime() {
 	for (int i = 0; i < TargetCnt; i++) {
-		if (TargetList[i].Active) {
-			if (TargetList[i].Gravity) {
-				TargetList[i].speedy -= 0.0245f;
+		if (tList[i].Active) {
+			if (tList[i].Gravity) {
+				tList[i].speedy -= 0.0245f;
 			}
-			TargetList[i].x += TargetList[i].speedx;
-			TargetList[i].y += TargetList[i].speedy;
-			TargetList[i].z += TargetList[i].speedz;
+			tList[i].x += tList[i].speedx;
+			tList[i].y += tList[i].speedy;
+			tList[i].z += tList[i].speedz;
 
-			if (TargetList[i].Hit) {
-				TargetList[i].DeathTime += 0.25;
-				if (TargetList[i].DeathTime > 4 && !TargetList[i].Gravity) {
-					TargetList[i].Gravity = true;
-					TargetList[i].speedx += (float)((rand() % 10) - 5) / 100.0f;
-					TargetList[i].speedy += (float)(rand() % 10) / 100.0f + 0.1f;
-					TargetList[i].speedz += (float)((rand() % 10) - 5) / 100.0f;
+			if (tList[i].Hit) {
+				tList[i].DeathTime += 0.25;
+				if (tList[i].DeathTime > 4 && !tList[i].Gravity) {
+					tList[i].Gravity = true;
+					tList[i].speedx += (float)((rand() % 10) - 5) / 100.0f;
+					tList[i].speedy += (float)(rand() % 10) / 100.0f + 0.1f;
+					tList[i].speedz += (float)((rand() % 10) - 5) / 100.0f;
 				}
-				if (TargetList[i].DeathTime > 60)
-					TargetList[i].Active = false;
+				if (tList[i].DeathTime > 60)
+					tList[i].Active = false;
 			}
-			else if (!TargetList[i].Invincible) {
-				if (TargetList[i].LiveTime < (TargetList[i].score + 10) * 4.0f) {
-					TargetList[i].LiveTime += 0.25;
+			else if (!tList[i].Invincible) {
+				if (tList[i].LiveTime < (tList[i].score + 10) * 4.0f) {
+					tList[i].LiveTime += 0.25;
 				}
 				else {
-					TargetList[i].Active = false;
+					tList[i].Active = false;
 				}
 			}
 		}
@@ -168,47 +168,47 @@ void TargetSpawn(int Type, int Cnt, int RandomType,
 	else Tagets = TargetCnt;
 
 	for (int i = 0; i < Tagets; i++) {
-		TargetList[i].Active = true;
-		TargetList[i].Gravity = false;
+		tList[i].Active = true;
+		tList[i].Gravity = false;
 
-		TargetList[i].Hit = false;
-		TargetList[i].hitRange = 0;
+		tList[i].Hit = false;
+		tList[i].hitRange = 0;
 
 		//TargetList[i].Hit = true;
 		//TargetList[i].hitRange = 2;
 
-		TargetList[i].Type = Type;
-		TargetList[i].speedx = 0;
-		TargetList[i].speedy = 0;
-		TargetList[i].speedz = 0;
+		tList[i].Type = Type;
+		tList[i].speedx = 0;
+		tList[i].speedy = 0;
+		tList[i].speedz = 0;
 
-		TargetList[i].LiveTime = 0;
-		TargetList[i].DeathTime = 0;
+		tList[i].LiveTime = 0;
+		tList[i].DeathTime = 0;
 
-		TargetList[i].x = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 4;
-		TargetList[i].y = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 2;
-		TargetList[i].z = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep / 4.0f;
+		tList[i].x = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 4;
+		tList[i].y = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 2;
+		tList[i].z = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep / 4.0f;
 
 		if (Score == 0) {
-			TargetList[i].score = rand() % 40 + (RangeStep * 5);
+			tList[i].score = rand() % 40 + (RangeStep * 5);
 		}
-		else TargetList[i].score = Score;
+		else tList[i].score = Score;
 		if (RangeStep == 0) {
 			if (RandomType == 0) {
-				if (TargetList[i].score > 10)
-					TargetList[i].RangeStep = rand() % ((int)TargetList[i].score / 5 - 1) + 2;
-				else if (TargetList[i].score > 5) TargetList[i].RangeStep = 2;
-				else TargetList[i].RangeStep = 1;
+				if (tList[i].score > 10)
+					tList[i].RangeStep = rand() % ((int)tList[i].score / 5 - 1) + 2;
+				else if (tList[i].score > 5) tList[i].RangeStep = 2;
+				else tList[i].RangeStep = 1;
 			}
 			else {
-				TargetList[i].RangeStep = ((int)TargetList[i].score / 5) + 1;
+				tList[i].RangeStep = ((int)tList[i].score / 5) + 1;
 			}
 		}
-		else TargetList[i].RangeStep = RangeStep;
+		else tList[i].RangeStep = RangeStep;
 		if (Size == 0) {
-			TargetList[i].size = (float)(rand() % 10) / 100.0f + 0.1f;
+			tList[i].size = (float)(rand() % 10) / 100.0f + 0.1f;
 		}
-		else TargetList[i].size = Size;
+		else tList[i].size = Size;
 	}
 }
 
@@ -229,4 +229,3 @@ float ScoreCaculate(float Score, int RangeStep, int HitStep) {
 	if (RangeStep > 1) return Score * (float)HitStep / (float)(RangeStep - 1);
 	else return Score;
 }
-
