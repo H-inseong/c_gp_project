@@ -229,3 +229,111 @@ float ScoreCaculate(float Score, int RangeStep, int HitStep) {
 	if (RangeStep > 1) return Score * (float)HitStep / (float)(RangeStep - 1);
 	else return Score;
 }
+
+int CheckCenterTarget(const Camera& camera) {
+	glm::vec3 camPos = camera.getPosition();
+	glm::vec3 camDir = glm::normalize(camera.getFront());
+
+	int hitIndex = -1;
+	float closestDistance = std::numeric_limits<float>::max();
+
+	for (int i = 0; i < TargetCnt; i++) {
+		if (!tList[i].Active) continue;
+
+		// 타겟 정보를 구 중심과 반지름으로 취급
+		glm::vec3 targetCenter(tList[i].x, tList[i].y, tList[i].z);
+		float radius = tList[i].size;
+
+		// 광선 파라메트릭: R(t) = camPos + t * camDir (t >= 0)
+		// 구 방정식: |P - C| = r
+		// 충돌 판정: (camPos + camDir*t - targetCenter)^2 = r^2
+		// 이를 t에 대해 풀면 2차방정식: a*t^2 + b*t + c = 0
+		glm::vec3 oc = camPos - targetCenter;
+		float a = glm::dot(camDir, camDir);
+		float b = 2.0f * glm::dot(oc, camDir);
+		float c = glm::dot(oc, oc) - radius * radius;
+
+		float discriminant = b * b - 4 * a * c;
+		if (discriminant < 0) {
+			continue;
+		}
+
+		float sqrtD = sqrt(discriminant);
+		float t1 = (-b - sqrtD) / (2.0f * a);
+		float t2 = (-b + sqrtD) / (2.0f * a);
+
+		float tHit = -1.0f;
+		if (t1 > 0 && t2 > 0) {
+			tHit = std::min(t1, t2);
+		}
+		else if (t1 > 0) {
+			tHit = t1;
+		}
+		else if (t2 > 0) {
+			tHit = t2;
+		}
+		if (tHit > 0 && tHit < closestDistance) {
+			closestDistance = tHit;
+			hitIndex = i;
+		}
+	}
+	return hitIndex;
+}
+
+float EvaluateTargetHitScore(const Camera& camera, int targetIndex) {
+	if (targetIndex < 0 || targetIndex >= TargetCnt || !tList[targetIndex].Active) {
+		return 0.0f;
+	}
+
+	glm::vec3 camPos = camera.getPosition();
+	glm::vec3 camDir = glm::normalize(camera.getFront());
+	glm::vec3 targetCenter(tList[targetIndex].x, tList[targetIndex].y, tList[targetIndex].z);
+	float radius = tList[targetIndex].size;
+	glm::vec3 oc = camPos - targetCenter;
+	float a = glm::dot(camDir, camDir);
+	float b = 2.0f * glm::dot(oc, camDir);
+	float c = glm::dot(oc, oc) - radius * radius;
+
+	float discriminant = b * b - 4 * a * c;
+	if (discriminant < 0) {
+		// 이론상 여기 오면 안 되지만 혹시 몰라 0점 반환
+		return 0.0f;
+	}
+
+	float sqrtD = sqrt(discriminant);
+	float t1 = (-b - sqrtD) / (2.0f * a);
+	float t2 = (-b + sqrtD) / (2.0f * a);
+
+	float tHit = -1.0f;
+	if (t1 > 0 && t2 > 0) tHit = std::min(t1, t2);
+	else if (t1 > 0) tHit = t1;
+	else if (t2 > 0) tHit = t2;
+
+	if (tHit <= 0) {
+		return 0.0f;
+	}
+
+	glm::vec3 hitPos = camPos + camDir * tHit;
+	float dist = glm::length(hitPos - targetCenter);
+
+	// 어느 링에 맞았는지 판별
+	// j=0 : 가장 바깥쪽 링, j=(RangeStep-1) : 가장 안쪽 링
+	int hitRing = -1;
+	for (int j = 0; j < tList[targetIndex].RangeStep; j++) {
+		float ringRadius = ((float)(tList[targetIndex].RangeStep - j) / (float)tList[targetIndex].RangeStep) * tList[targetIndex].size;
+		if (dist <= ringRadius) {
+			hitRing = j;
+			break;
+		}
+	}
+	if (hitRing == -1) {
+		return 0.0f;
+	}
+
+	float hitScore = ScoreCaculate(tList[targetIndex].score, tList[targetIndex].RangeStep, hitRing);
+
+	tList[targetIndex].Hit = true;
+	tList[targetIndex].hitRange = hitRing;
+
+	return hitScore;
+}

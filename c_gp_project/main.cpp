@@ -9,6 +9,9 @@ Background mBackground;
 Crosshair mCrosshair;
 Gun mGun;
 
+int stage = 1; // 1:5x5사이즈 2:원운동 불사타겟 3:크기변화 타겟
+int score = 0;
+
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
@@ -36,6 +39,7 @@ void keyDown(unsigned char key, int x, int y) {
         break;
     }
 }
+
 void keyUp(unsigned char key, int x, int y) {
     keys[key] = false;
 }
@@ -68,7 +72,6 @@ void specialKeyCallback(int key, int x, int y) {
     }
 }
 
-
 void handleMouseWheel(int button, int dir, int x, int y) {
     if (dir > 0) camera.processScrollInput(dir);
     if (dir < 0) camera.processScrollInput(dir);
@@ -80,6 +83,13 @@ void mouseButtonCallback(int button, int state, int x, int y) {
             leftMousePressed = true;
             PlaySound(L"Resource\\gunshot.wav", NULL, SND_FILENAME | SND_ASYNC);
             gunRecoil = gunRecoilMax;
+            int targetIndex = CheckCenterTarget(camera);
+            if (targetIndex != -1) {
+                // 점수 처리
+                float score = EvaluateTargetHitScore(camera, targetIndex);
+                std::cout << "Hit target " << targetIndex << " with score: " << score << std::endl;
+            }
+
         }
         else if (state == GLUT_UP) {
             leftMousePressed = false;
@@ -154,7 +164,6 @@ void render() {
         if (tList[i].Active) {
             glFrontFace(GL_CW);
             model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(0, 2, -4));
 
             if (tList[i].Hit && tList[i].DeathTime > 4) {
                 model = glm::translate(model, glm::vec3(tList[i].x,
@@ -288,7 +297,6 @@ void render() {
 
     glutSwapBuffers();
 }
-
 
 void update() {
     float currentFrame = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
