@@ -9,7 +9,7 @@ Camera::Camera(glm::vec3 position)
     mPitch(0.0f),
     mFOV(90.0f),
     mMouseSensitivity(0.1f),
-    mSpeed(2.5f)
+    mSpeed(10.f)
 {
     updateCameraVectors();
 }
@@ -17,9 +17,19 @@ Camera::Camera(glm::vec3 position)
 glm::mat4 Camera::getViewMatrix() const {
     return glm::lookAt(mPosition, mPosition + mFront, mUp);
 }
+
 glm::vec3 Camera::getPosition() const {
     return glm::vec3(mPosition.x, mPosition.y, mPosition.z);
 }
+
+glm::vec3 Camera::getFront() const {
+    return glm::vec3(mFront.x, mFront.y, mFront.z);
+}
+
+glm::vec3 Camera::getUp() const {
+    return glm::vec3(mUp.x, mUp.y, mUp.z);
+}
+
 
 glm::mat4 Camera::getProjectionMatrix(float aspectRatio) const {
     return glm::perspective(glm::radians(mFOV), aspectRatio, 0.1f, 100.0f);
@@ -55,17 +65,17 @@ void Camera::processMouseMovement(float xOffset, float yOffset) {
 }
 
 void Camera::processScrollInput(float yOffset) {
-    yOffset > 0 ? increaseFOV() : decreaseFOV();
+    yOffset > 0 ? decreaseFOV() : increaseFOV();
 }
 
 void Camera::increaseFOV() {
     mFOV += 5.0f;
-    if (mFOV > 110.0f) mFOV = 110.0f;
+    if (mFOV > 120.0f) mFOV = 120.0f;
 }
 
 void Camera::decreaseFOV() {
     mFOV -= 5.0f;
-    if (mFOV < 90.0f) mFOV = 90.0f;
+    if (mFOV < 80.0f) mFOV = 80.0f;
 }
 
 void Camera::increaseSensitivity() {

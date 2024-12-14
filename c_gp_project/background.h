@@ -1,21 +1,20 @@
 #pragma once
-#include <glm/glm.hpp>
-#include <string>
+#include "pch.h"
+#include "Shader.h"
 
-class Gun {
+class Background {
 public:
-    Gun();
-    ~Gun();
-
-    void init(const std::string& objFile, const std::string& texturePath);
+    Background();
+    ~Background();
+    void init(const std::string& objPath, const std::string& texturePath);
     void draw(const glm::mat4& view, const glm::mat4& projection);
+
 private:
-    void loadModel(const std::string& objFile);
+    void loadModel(const std::string& objPath);
     void loadTexture(const std::string& texturePath);
     void setupMesh(const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
 
-private:
     GLuint VAO, VBO, EBO;
-    GLuint textureID; // ≈ÿΩ∫√≥ ID
+    GLuint textureID;
     size_t indexCount;
 };

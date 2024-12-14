@@ -30,10 +30,16 @@
     <ClCompile Include="pch.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Gun.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="background.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
     <ClCompile Include="stb_image.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Gun.cpp">
+    <ClCompile Include="tiny_obj_loader.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -55,6 +61,9 @@
     </ClInclude>
     <ClInclude Include="pch.h" />
     <ClInclude Include="Gun.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="background.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

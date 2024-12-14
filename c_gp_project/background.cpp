@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "Gun.h"
+#include "Background.h"
 
-Gun::Gun() : VAO(0), VBO(0), EBO(0), textureID(0), indexCount(0) {}
+Background::Background() : VAO(0), VBO(0), EBO(0), textureID(0), indexCount(0) {}
 
-Gun::~Gun() {
+Background::~Background() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
@@ -12,20 +12,19 @@ Gun::~Gun() {
     }
 }
 
-void Gun::init(const std::string& objFile, const std::string& texturePath) {
-    loadModel(objFile);
+void Background::init(const std::string& objPath, const std::string& texturePath) {
+    loadModel(objPath);
     loadTexture(texturePath);
 }
 
-void Gun::loadModel(const std::string& objFile) {
+void Background::loadModel(const std::string& objPath) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
 
-    std::string baseDir = objFile.substr(0, objFile.find_last_of('/') + 1);
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, objFile.c_str(), baseDir.c_str())) {
-        std::cerr << "Failed to load .obj file: " << err << std::endl;
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, objPath.c_str())) {
+        std::cerr << "Failed to load OBJ file: " << err << std::endl;
         return;
     }
 
@@ -38,10 +37,12 @@ void Gun::loadModel(const std::string& objFile) {
 
     for (const auto& shape : shapes) {
         for (const auto& index : shape.mesh.indices) {
+            // 위치
             vertices.push_back(attrib.vertices[3 * index.vertex_index + 0]);
             vertices.push_back(attrib.vertices[3 * index.vertex_index + 1]);
             vertices.push_back(attrib.vertices[3 * index.vertex_index + 2]);
 
+            // 법선
             if (!attrib.normals.empty()) {
                 vertices.push_back(attrib.normals[3 * index.normal_index + 0]);
                 vertices.push_back(attrib.normals[3 * index.normal_index + 1]);
@@ -53,10 +54,10 @@ void Gun::loadModel(const std::string& objFile) {
                 vertices.push_back(0.0f);
             }
 
+            // 텍스처 좌표
             if (!attrib.texcoords.empty()) {
-                // 텍스처 좌표
                 vertices.push_back(attrib.texcoords[2 * index.texcoord_index + 0]);
-                vertices.push_back(1.0f - attrib.texcoords[2 * index.texcoord_index + 1]);
+                vertices.push_back(attrib.texcoords[2 * index.texcoord_index + 1]);
             }
             else {
                 vertices.push_back(0.0f);
@@ -66,11 +67,12 @@ void Gun::loadModel(const std::string& objFile) {
             indices.push_back((unsigned int)indices.size());
         }
     }
+
     indexCount = indices.size();
     setupMesh(vertices, indices);
 }
 
-void Gun::loadTexture(const std::string& texturePath) {
+void Background::loadTexture(const std::string& texturePath) {
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
@@ -92,39 +94,40 @@ void Gun::loadTexture(const std::string& texturePath) {
     stbi_image_free(data);
 }
 
-void Gun::setupMesh(const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
+void Background::setupMesh(const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
 
-    // 정점 버퍼
+    // 정점 데이터
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
-    // 인덱스 버퍼
+    // 인덱스 데이터
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-    // 정점 속성
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // 위치
+    // 정점 속성 (위치, 법선, 텍스처)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // 법선
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))); // 텍스처 좌표
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
 }
 
-void Gun::draw(const glm::mat4& view, const glm::mat4& projection) {
+void Background::draw(const glm::mat4& view, const glm::mat4& projection) {
     if (textureID) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureID);
     }
+
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);

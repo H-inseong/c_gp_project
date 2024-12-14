@@ -3,90 +3,73 @@
 GLuint VAO, VBO;
 Shader* shaderProgram;
 
-// 다른 셰이더 필요시
-//Shader* sec_shaderProgram;
-
-Camera camera(glm::vec3(0.0f, 2.0f, 0.0f));
-
+Camera camera(glm::vec3(0.0f, 3.0f, 0.0f));
+Background mBackground;
 Crosshair mCrosshair;
+Gun mGun;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 bool firstMouse = true;
+bool leftMousePressed = false;
 float lastX = SCREEN_WIDTH / 2.0f;
 float lastY = SCREEN_HEIGHT / 2.0f;
 
+glm::vec3 lightPos(0.0f, 20.0f, 0.0f);
 
-glm::vec3 lightPos(1.0f, 1.0f, 1.0f);
+bool keys[256] = { false };
 
-void initBackground() {
-    float vertices[] = {
-        // Positions          // Normals          // Colors
-        -5.0f,  0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-        -5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-         5.0f,  0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-
-         5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f, 
-         5.0f,  0.0f, -5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-        -5.0f,  0.0f,  5.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-    };
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+void keyDown(unsigned char key, int x, int y) {
+    keys[key] = true;
+}
+void keyUp(unsigned char key, int x, int y) {
+    keys[key] = false;
 }
 
+void processInput() {
+    if (keys['w'] || keys['W']) camera.processKeyboardInput('w', deltaTime);
+    if (keys['s'] || keys['S']) camera.processKeyboardInput('s', deltaTime);
+    if (keys['a'] || keys['A']) camera.processKeyboardInput('a', deltaTime);
+    if (keys['d'] || keys['D']) camera.processKeyboardInput('d', deltaTime);
+    if (keys['q'] || keys['Q']) exit(0);
+}
 
-void processInput(unsigned char key, int x, int y) {
-    switch (key)
-    {
-    case 'W':
-    case 'w':
-    case 'S':
-    case 's':
-    case 'A':
-    case 'a':
-    case 'D':
-    case 'd':
-        camera.processKeyboardInput(key, deltaTime);
-        break;
-    case '-':
-    case '_':
-        camera.decreaseSensitivity();
-        break;
-    case '+':
-    case '=':
+void specialKeyCallback(int key, int x, int y) {
+    switch (key) {
+    case GLUT_KEY_UP:
         camera.increaseSensitivity();
         break;
-    case 'q':
-    case 'Q':
-        exit(0);
+    case GLUT_KEY_DOWN:
+        camera.decreaseSensitivity();
+        break;
+
+    case GLUT_KEY_LEFT:
+        mCrosshair.previousTexture();
+        break;
+    case GLUT_KEY_RIGHT:
+        mCrosshair.nextTexture();
         break;
     default:
         break;
     }
 }
 
+
 void handleMouseWheel(int button, int dir, int x, int y) {
     if (dir > 0) camera.processScrollInput(dir);
     if (dir < 0) camera.processScrollInput(dir);
+}
+
+void mouseButtonCallback(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON) {
+        if (state == GLUT_DOWN) {
+            leftMousePressed = true;
+        }
+        else if (state == GLUT_UP) {
+            leftMousePressed = false;
+        }
+    }
 }
 
 void mouseCallback(int x, int y) {
@@ -108,6 +91,19 @@ void mouseCallback(int x, int y) {
     glutWarpPointer(centerX, centerY);
 }
 
+void mouseMotionCallback(int x, int y) {
+    if (leftMousePressed) {
+        int centerX = SCREEN_WIDTH / 2;
+        int centerY = SCREEN_HEIGHT / 2;
+
+        float xOffset = x - centerX;
+        float yOffset = centerY - y;
+
+        camera.processMouseMovement(xOffset, yOffset);
+        glutWarpPointer(centerX, centerY);
+    }
+}
+
 void keepMouseCentered() {
     int centerX = SCREEN_WIDTH / 2;
     int centerY = SCREEN_HEIGHT / 2;
@@ -121,55 +117,70 @@ void render() {
     glm::mat4 view = camera.getViewMatrix();
     glm::mat4 projection = camera.getProjectionMatrix((float)SCREEN_WIDTH / SCREEN_HEIGHT);
 
-    // main함수에 선언한 Shader 의 인자를 파일이름으로 읽어온
-    // 쉐이더를 사용 시작
     shaderProgram->use();
-    
-    //uniform view, projection행렬 전달부분
 
-    // vertex_shader의 uniform 변수 view에   view, 즉  camera.getViewMatrix() 의 행렬의 값을 전달 
     shaderProgram->setMat4("view", glm::value_ptr(view));
-
-    // vertex_shader의 uniform 변수 projection에 camera.getProjectionMatrix 의 행렬의 값을 전달 
     shaderProgram->setMat4("projection", glm::value_ptr(projection));
-
-
-
-    // 조명 및 색상 설정
-
-
-    // fragment_shader의 uniform 변수 lightPos에
-    // lightPos.x, lightPos.y, lightPos.z 값을 전달
     shaderProgram->setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
-
-
-    // fragment_shader의 uniform 변수  viewPos에
-    // camera.getPosition().x, camera.getPosition().y, camera.getPosition().z 값을 전달
     shaderProgram->setVec3("viewPos", camera.getPosition().x, camera.getPosition().y, camera.getPosition().z);
+    shaderProgram->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
-
-    // fragment_shader의 uniform 변수  lightColor에
-    // 2.0f, 2.0f, 2.0f 값을 전달
-    shaderProgram->setVec3("lightColor", 2.0f, 2.0f, 2.0f);
+    shaderProgram->setInt("texture1", 0);
 
     glm::mat4 model = glm::mat4(1.0f);
     shaderProgram->setMat4("model", glm::value_ptr(model));
-    
-    // 바닥 렌더링
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 
-    //mGun.draw(camera.getViewMatrix());
+    {
+        glm::mat4 backgroundModel = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f));
+        backgroundModel = glm::translate(backgroundModel, glm::vec3(0.0f, 0.0f, 2.0f));
+        shaderProgram->setMat4("model", glm::value_ptr(backgroundModel));
+        mBackground.draw(view, projection);
+    }
+
+    // Gun 렌더링
+    {
+        glm::vec3 cameraPos = camera.getPosition();
+        glm::vec3 cameraFront = glm::normalize(camera.getFront());
+        glm::vec3 cameraUp = glm::normalize(camera.getUp());
+        glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, cameraUp));
+
+        float forwardOffset = 0.4f;
+        float rightOffset = 0.5f;
+        float downOffset = -0.5f;
+
+        glm::vec3 gunPos = cameraPos
+            + cameraFront * forwardOffset
+            + cameraRight * rightOffset
+            + cameraUp * downOffset;
+
+        glm::mat4 gunModel = glm::translate(glm::mat4(1.0f), gunPos);
+        glm::mat4 lookAtMatrix = glm::lookAt(gunPos, gunPos + cameraFront, cameraUp);
+        gunModel = glm::inverse(lookAtMatrix);
+
+        gunModel = glm::rotate(gunModel, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        gunModel = glm::scale(gunModel, glm::vec3(0.2f));
+
+        shaderProgram->setMat4("model", glm::value_ptr(gunModel));
+        mGun.draw(view, projection);
+    }
     mCrosshair.draw();
 
     glutSwapBuffers();
 }
 
+
 void update() {
     float currentFrame = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
+
+    processInput();
+    lightPos = camera.getPosition();
+    lightPos.y += 30.f;
+    lightPos.z += 5.f;
 
     glutPostRedisplay();
 }
@@ -189,20 +200,22 @@ int main(int argc, char** argv) {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+
     shaderProgram = new Shader("vertex_shader.glsl", "fragment_shader.glsl");
 
-    //다른 셰이더 필요시 
-    //sec_shaderProgram = new Shader("sec_vertex_shader.glsl", "sec_fragment_shader.glsl");
+    mCrosshair.init();
+    mGun.init("Resource\\Gun.obj", "Resource\\Gun.jpg");
+    mBackground.init("Resource\\background.obj", "Resource\\background.png");
 
-
-    initBackground();
-   
-    mCrosshair.init("crosshair2.png");
-
+    glutKeyboardFunc(keyDown);
+    glutKeyboardUpFunc(keyUp);
+    glutSpecialFunc(specialKeyCallback);
 
     glutDisplayFunc(render);
     glutIdleFunc(update);
-    glutKeyboardFunc(processInput);
+
+    glutMouseFunc(mouseButtonCallback);
+    glutMotionFunc(mouseMotionCallback);
     glutPassiveMotionFunc(mouseCallback);
     glutMouseWheelFunc(handleMouseWheel);
     keepMouseCentered();

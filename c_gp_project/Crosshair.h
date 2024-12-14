@@ -5,11 +5,13 @@ public:
     Crosshair();
     ~Crosshair();
 
-    void init(const char* texturePath);
+    void init();
     void draw();
-
+    void nextTexture();
+    void previousTexture();
 private:
-    GLuint VAO, VBO, EBO;
-    GLuint textureID;
     Shader* shaderProgram;
+    GLuint VAO, VBO, EBO;
+    GLuint textureID[3];
+    int textureIndex = 0;
 };

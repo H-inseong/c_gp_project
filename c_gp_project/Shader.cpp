@@ -37,6 +37,11 @@ void Shader::use() const {
 void Shader::setFloat(const std::string& name, float value) const {
     glUniform1f(glGetUniformLocation(mProgramID, name.c_str()), value);
 }
+
+void Shader::setInt(const std::string& name, int value) const {
+    glUniform1i(glGetUniformLocation(mProgramID, name.c_str()), value);
+}
+
 void Shader::setVec2(const std::string& name, float x, float y) const {
     GLint location = glGetUniformLocation(mProgramID, name.c_str());
     if (location == -1) {
@@ -44,6 +49,7 @@ void Shader::setVec2(const std::string& name, float x, float y) const {
     }
     glUniform2f(location, x, y);
 }
+
 void Shader::setVec3(const std::string& name, float x, float y, float z) const {
     glUniform3f(glGetUniformLocation(mProgramID, name.c_str()), x, y, z);
 }

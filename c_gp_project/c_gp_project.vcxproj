@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="background.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Crosshair.cpp" />
     <ClCompile Include="Gun.cpp" />
@@ -143,6 +144,7 @@
     </ClCompile>
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="stb_image.cpp" />
+    <ClCompile Include="tiny_obj_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="crosshair_fragment_shader.glsl" />
@@ -151,6 +153,7 @@
     <None Include="vertex_shader.glsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="background.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Crosshair.h" />
     <ClInclude Include="Gun.h" />

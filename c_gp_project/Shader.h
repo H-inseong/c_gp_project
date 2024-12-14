@@ -12,6 +12,7 @@ public:
     void setVec2(const std::string& name, float x, float y) const;
     void setVec3(const std::string& name, float x, float y, float z) const;
     void setMat4(const std::string& name, const float* value) const;
+    void setInt(const std::string& name, int value) const;
 
 private:
     GLuint mProgramID;
