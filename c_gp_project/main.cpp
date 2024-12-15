@@ -180,13 +180,11 @@ void render() {
             for (int j = 0; j < tList[i].RangeStep; j++) {
                 float TargetSclae = (float)(tList[i].RangeStep - j) / (float)tList[i].RangeStep;
                 float slotScore =
-                    ScoreCaculate(tList[i].score, tList[i].RangeStep, j)
-                    - (tList[i].LiveTime / 4.0f);
+                    ScoreCaculate(tList[i].score, tList[i].RangeStep, j, (tList[i].LiveTime / 16.0f));
 
                 if (tList[i].Hit && tList[i].hitRange <= j) {
                     float HitScore =
-                        ScoreCaculate(tList[i].score, tList[i].RangeStep, tList[i].Hit)
-                        - (tList[i].LiveTime / 4.0f);
+                        ScoreCaculate(tList[i].score, tList[i].RangeStep, tList[i].hitRange, (tList[i].LiveTime / 16.0f));
                     if (tList[i].hitRange < j)
                         target_shaderProgram->setVec4("FullBrightColor",
                             ScoreToColor(HitScore, 50, 0, 25),
@@ -298,7 +296,7 @@ void render() {
     glutSwapBuffers();
 }
 
-void update() {
+void update(int value) {
     float currentFrame = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
@@ -318,6 +316,8 @@ void update() {
     TargetTime();
 
     glutPostRedisplay();
+
+    glutTimerFunc(25, update, 1);
 }
 
 int main(int argc, char** argv) {
@@ -343,12 +343,15 @@ int main(int argc, char** argv) {
     mGun.init("Resource\\Gun.obj", "Resource\\Gun.jpg");
     mBackground.init("Resource\\background.obj", "Resource\\background.png");
 
+    TargetSpawn(rand() % 3, 16, 0, 0, 0, 1);
+
     glutKeyboardFunc(keyDown);
     glutKeyboardUpFunc(keyUp);
     glutSpecialFunc(specialKeyCallback);
 
     glutDisplayFunc(render);
-    glutIdleFunc(update);
+    //glutIdleFunc(update);
+    glutTimerFunc(25, update, 1);
 
     glutMouseFunc(mouseButtonCallback);
     glutMotionFunc(mouseMotionCallback);

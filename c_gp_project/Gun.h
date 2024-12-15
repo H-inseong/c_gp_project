@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
+#include <GL/glm/glm.hpp>
 #include <string>
 
 class Gun {

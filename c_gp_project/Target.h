@@ -16,6 +16,8 @@ void TargetTime();
 void TargetSpawn(int Type = 0, int Cnt = 1, int RandomType = 0,
 int RangeStep = 0, float Score = 0, float Size = 0);
 float ScoreToColor(float score, float Min = 0, float Max = 0, float Step = 10.0f);
-float ScoreCaculate(float Score, int RangeStep, int HitStep);
+float ScoreCaculate(float Score, int RangeStep, int HitStep, float LiveTime);
 int CheckCenterTarget(const Camera& camera);
 float EvaluateTargetHitScore(const Camera& camera, int targetIndex);
+
+bool TargetHitCheck(const Camera& camera, glm::vec3 TargetPos, float size);
