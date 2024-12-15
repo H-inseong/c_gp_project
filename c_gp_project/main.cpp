@@ -42,6 +42,9 @@ bool CheatMode = false;
 bool TargetDispenserOn = true;
 int TDCoolDown = 0;
 
+bool Intermid = false;
+bool Ending = false;
+
 int TargetType = 0;
 int TargetStep = 4;
 float TargetSize = 1;
@@ -49,10 +52,18 @@ float TargetScore = 25;
 float TargetScoreDecay = 0;
 
 void GameProgress();
+void EnterIntermid();
 
 void keyDown(unsigned char key, int x, int y) {
     keys[key] = true;
     
+    if (Intermid) {
+        if (!Ending) {
+            Intermid = false;
+            GameProgress();
+        }
+    }
+
     switch (key)
     {
     case '6':
@@ -180,21 +191,28 @@ void handleMouseWheel(int button, int dir, int x, int y) {
 void mouseButtonCallback(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON) {
         if (state == GLUT_DOWN) {
-            leftMousePressed = true;
-            PlaySound(L"Resource\\gunshot.wav", NULL, SND_FILENAME | SND_ASYNC);
-            gunRecoil = gunRecoilMax;
-            int targetIndex = CheckCenterTarget(camera);
-            if (targetIndex != -1) {
-                // 점수 처리
-                float score = EvaluateTargetHitScore(camera, targetIndex);
-                if (score > 0 && GameStage != 4) {
-                    TotalScore += score;
-                    GameProgressCnt--;
-                    if (GameStage > 0 && GameProgressCnt <= 0) GameProgress();
+            if (Intermid) {
+                if (!Ending) {
+                    Intermid = false;
+                    GameProgress();
                 }
-                std::cout << "Hit target " << targetIndex << " with score: " << score << std::endl;
             }
-
+            else {
+                leftMousePressed = true;
+                PlaySound(L"Resource\\gunshot.wav", NULL, SND_FILENAME | SND_ASYNC);
+                gunRecoil = gunRecoilMax;
+                int targetIndex = CheckCenterTarget(camera);
+                if (targetIndex != -1) {
+                    // 점수 처리
+                    float score = EvaluateTargetHitScore(camera, targetIndex);
+                    if (score > 0 && GameStage != 4) {
+                        TotalScore += score;
+                        GameProgressCnt--;
+                        if (GameStage > 0 && GameProgressCnt <= 0) EnterIntermid();
+                    }
+                    std::cout << "Hit target " << targetIndex << " with score: " << score << std::endl;
+                }
+            }
         }
         else if (state == GLUT_UP) {
             leftMousePressed = false;
@@ -267,13 +285,17 @@ void drawScore(float score) {
     glDisable(GL_DEPTH_TEST);
 
     glColor3f(1.0f, 1.0f, 1.0f);
-    char scoreText[32];
-    sprintf(scoreText, "Score: %.2f", score);
-
     // 화면 왼쪽 상단에 점수 표시
     //폰트 2종류: 가장 오른쪽 숫자가 폰트 크기
     //GLUT_BITMAP_TIMES_ROMAN_24
     //GLUT_BITMAP_HELVETICA_18
+
+    char scoreText[64];
+
+    if (GameStage == 4)
+        sprintf(scoreText, "Stage: %d | Time Left: %d | Score: %.2f", GameStage, GameProgressCnt, score);
+    else
+        sprintf(scoreText, "Stage: %d | Target Left: %d | Score: %.2f", GameStage, GameProgressCnt, score);
     renderBitmapString(20.0f, SCREEN_HEIGHT - 30.0f, GLUT_BITMAP_HELVETICA_18, scoreText);
 
     glEnable(GL_DEPTH_TEST);
@@ -283,6 +305,42 @@ void drawScore(float score) {
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
 }
+
+void drawIntermid() {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glDisable(GL_DEPTH_TEST);
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+    char Text[32];
+    if (Ending) {
+        sprintf(Text, "Game Clear!");
+        renderBitmapString(SCREEN_WIDTH / 2 - 40, SCREEN_HEIGHT / 2, GLUT_BITMAP_TIMES_ROMAN_24, Text);
+        sprintf(Text, "Total Score: %.2f", TotalScore);
+        renderBitmapString(SCREEN_WIDTH / 2 - 40, SCREEN_HEIGHT / 2 - 20, GLUT_BITMAP_HELVETICA_18, Text);
+    }
+    else {
+        sprintf(Text, "Stage %d Clear", GameStage);
+        renderBitmapString(SCREEN_WIDTH / 2 - 40, SCREEN_HEIGHT / 2, GLUT_BITMAP_TIMES_ROMAN_24, Text);
+        sprintf(Text, "Press any key to Continue");
+        renderBitmapString(SCREEN_WIDTH / 2 - 40, SCREEN_HEIGHT / 2 - 20, GLUT_BITMAP_HELVETICA_18, Text);
+    }
+
+    glEnable(GL_DEPTH_TEST);
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+}
+
 void render() {
 
 
@@ -469,10 +527,15 @@ void render() {
         shaderProgram->setMat4("model", glm::value_ptr(gunModel));
         mGun.draw(view, projection);
     }
-    mCrosshair.draw();
-
+    
     glUseProgram(0);
     drawScore(TotalScore);
+    if (Intermid) {
+        drawIntermid();
+    }
+    else {
+        mCrosshair.draw();
+    }
     glutSwapBuffers();
 }
 
@@ -509,7 +572,7 @@ void GameProgress() {
         TargetStep = 4;
         TargetScore = 0.01;
         TargetScoreDecay = 0;
-        GameProgressCnt = 360;
+        GameProgressCnt = 720;
         GameStage++;
         break;
     case 4:
@@ -539,7 +602,13 @@ void GameProgress() {
         break;
     }
 }
-
+void EnterIntermid() {
+    if (GameStage == 6) Ending = true;
+    Intermid = true;
+    for (int i = 0; i < TargetCnt; i++) {
+        if (!tList[i].Hit) tList[i].Gravity = true;
+    }
+}
 void update(int value) {
     float currentFrame = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
     deltaTime = currentFrame - lastFrame;
@@ -558,46 +627,47 @@ void update(int value) {
     }
 
     TargetTime();
-
-    if (GameStage == 4) {
-        if (!tList[0].Invincible && !tList[0].Active) {
-            tList[0].Type = 2;
-            tList[0].RangeStep = 4;
-            tList[0].score = 20;
-            tList[0].scoreDecay = 0;
-            tList[0].size = 1;
-            tList[0].DeathTime = 0;
-            tList[0].LiveTime = 0;
-            tList[0].hitRange = -1;
-            tList[0].orbitAngle = 1.5;
-            tList[0].orbitSpeed = 0.0025;
-            tList[0].Gravity = false;
-            tList[0].Active = true;
-            tList[0].Invincible = true;
-        }
-        if (tList[0].Invincible) {
-            GameProgressCnt--;
-            if (tList[0].Hit) {
-                if (GameProgressCnt < 0) {
-                    tList[0].Invincible = false;
-                    GameProgress();
-                }
-                else {
-                    std::cout << "Remains" << GameProgressCnt << " Score: " << TotalScore << std::endl;
-                    TotalScore += ScoreCaculate(0.25f, tList[0].RangeStep, tList[0].hitRange, 5);
-                    tList[0].Hit = false;
-                }
+    if (!Intermid) {
+        if (GameStage == 4) {
+            if (!tList[0].Invincible && (!tList[0].Active || tList[0].y < -5)) {
+                tList[0].Type = 2;
+                tList[0].RangeStep = 4;
+                tList[0].score = 20;
+                tList[0].scoreDecay = 0;
+                tList[0].size = 1;
+                tList[0].DeathTime = 0;
+                tList[0].LiveTime = 0;
+                tList[0].hitRange = -1;
+                tList[0].orbitAngle = 1.5;
+                tList[0].orbitSpeed = 0.0025;
+                tList[0].Gravity = false;
+                tList[0].Active = true;
+                tList[0].Invincible = true;
             }
-            else tList[0].hitRange = -1;
+            if (tList[0].Invincible) {
+                GameProgressCnt--;
+                if (tList[0].Hit) {
+                    if (GameProgressCnt < 0) {
+                        tList[0].Invincible = false;
+                        EnterIntermid();
+                    }
+                    else {
+                        std::cout << "Remains" << GameProgressCnt << " Score: " << TotalScore << std::endl;
+                        TotalScore += ScoreCaculate(0.25f, tList[0].RangeStep, tList[0].hitRange, 5);
+                        tList[0].Hit = false;
+                    }
+                }
+                else tList[0].hitRange = -1;
+            }
         }
-    }
-    else {
-        if (TargetDispenserOn) {
-            TDCoolDown++;
-            if (TDCoolDown > 60) {
-                TDCoolDown = 0;
-                if (GameStage == 0) TargetDispenser();
-                else TargetDispenser(TargetType, 0, TargetSize, TargetStep, TargetScore, TargetScoreDecay);
+        else {
+            if (TargetDispenserOn) {
+                TDCoolDown++;
+                if (TDCoolDown > 60) {
+                    TDCoolDown = 0;
+                    if (GameStage == 0) TargetDispenser();
+                    else TargetDispenser(TargetType, 0, TargetSize, TargetStep, TargetScore, TargetScoreDecay);
+                }
             }
         }
     }

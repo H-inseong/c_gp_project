@@ -182,7 +182,7 @@ void TargetPlace(int Num) {
 	int tryPlace = 0;
 
 	while (Collide || tryPlace > 1024) {
-		tList[Num].x = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 8;
+		tList[Num].x = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 10;
 		tList[Num].y = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 2 + 3;
 		tList[Num].z = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep / 4.0f;
 		Collide = false;
