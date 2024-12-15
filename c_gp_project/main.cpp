@@ -10,7 +10,7 @@ Crosshair mCrosshair;
 Gun mGun;
 
 int stage = 1; // 1:5x5사이즈 2:원운동 불사타겟 3:크기변화 타겟
-int score = 0;
+float score = 0;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -86,8 +86,9 @@ void mouseButtonCallback(int button, int state, int x, int y) {
             int targetIndex = CheckCenterTarget(camera);
             if (targetIndex != -1) {
                 // 점수 처리
-                float score = EvaluateTargetHitScore(camera, targetIndex);
+                score += EvaluateTargetHitScore(camera, targetIndex);
                 std::cout << "Hit target " << targetIndex << " with score: " << score << std::endl;
+                PlaySound(L"Resource\\target-shot.wav", NULL, SND_FILENAME | SND_ASYNC);
             }
 
         }
@@ -318,6 +319,11 @@ void update() {
     TargetTime();
 
     glutPostRedisplay();
+<<<<<<< Updated upstream
+=======
+
+    glutTimerFunc(16, update, 1);
+>>>>>>> Stashed changes
 }
 
 int main(int argc, char** argv) {
@@ -348,7 +354,12 @@ int main(int argc, char** argv) {
     glutSpecialFunc(specialKeyCallback);
 
     glutDisplayFunc(render);
+<<<<<<< Updated upstream
     glutIdleFunc(update);
+=======
+    //glutIdleFunc(update);
+    glutTimerFunc(16, update, 1);
+>>>>>>> Stashed changes
 
     glutMouseFunc(mouseButtonCallback);
     glutMotionFunc(mouseMotionCallback);

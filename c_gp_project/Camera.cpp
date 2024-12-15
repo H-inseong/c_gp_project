@@ -49,7 +49,10 @@ void Camera::processKeyboardInput(int key, float deltaTime) {
     if (key == 'a') mPosition -= rightXZ * velocity;
     if (key == 'D') mPosition += rightXZ * velocity;
     if (key == 'd') mPosition += rightXZ * velocity;
-    
+    if (mPosition.x > 29.f) mPosition.x = 29.f;
+    if (mPosition.x < -29.f) mPosition.x = -29.f;
+    if (mPosition.z > 30.f) mPosition.z = 30.f;
+    if (mPosition.z < -14.f) mPosition.z = -14.f;
 }
 
 void Camera::processMouseMovement(float xOffset, float yOffset) {
