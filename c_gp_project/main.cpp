@@ -34,7 +34,11 @@ int GameStage = -2;
 // 4: 트래킹 모드, 개수 = 16 | 5: 부패 = 0.25, 단계 4, 개수 = 16 | 6: 부패 0.5, 단계 4, 개수 = 16
 
 int GameProgressCnt = 0;
+float TotalScore = 0;
 
+int SpawnedTarget = 0;
+
+bool CheatMode = false;
 bool TargetDispenserOn = true;
 int TDCoolDown = 0;
 
@@ -48,65 +52,38 @@ void GameProgress();
 
 void keyDown(unsigned char key, int x, int y) {
     keys[key] = true;
+    
+    switch (key)
+    {
+    case '6':
+        break;
+    default:
+        break;
+    }
 
-    if (GameStage == -2) {
+    if (CheatMode) {
         switch (key)
         {
-        case 'o':
-            TargetType = rand() % 3;
-            TargetDispenserOn = false;
-            TDCoolDown = 0;
-            TargetStackSpawn(TargetType, 16, 0, TargetSize, TargetStep, TargetScore, TargetScoreDecay);
+        case '-':
+            TotalScore = 0;
+            GameStage = 0;
+            GameProgress();
             break;
-        case 'p':
-            TargetType = rand() % 3;
-            TargetDispenserOn = !TargetDispenserOn;
-            TDCoolDown = 0;
-            for (int i = 0; i < TargetCnt; i++) {
-                tList[i].Active = false;
-            }
+        case '0':
+            TotalScore = 0;
+            GameStage = 0;
             break;
-        case 'l':
-            if (TargetSize == 0) {
-                TargetSize = 1;
-            }
-            else TargetSize = 0;
+        case '1':
+            TotalScore = 0;
+            GameStage = -1;
             break;
-        case 'k':
-            if (TargetStep < 5) {
-                TargetStep++;
-            }
-            else TargetStep = 0;
-            break;
-        case 'n':
-            if (TargetScore == 0) {
-                TargetScore = 10;
-            }
-            else if (TargetScore < 50) {
-                TargetScore += 5;
-            }
-            else TargetScore = 0;
-            break;
-        case 'm':
-            if (TargetScoreDecay == 0) {
-                TargetScoreDecay = 0.125;
-            }
-            else if (TargetScoreDecay == 0.125) {
-                TargetScoreDecay = 0.25;
-            }
-            else if (TargetScoreDecay == 0.25) {
-                TargetScoreDecay = 0.5;
-            }
-            else if (TargetScoreDecay == 0.5) {
-                TargetScoreDecay = 1.0;
-            }
-            else TargetScoreDecay = 0;
-            break;
-        default:
+        case '2':
+            TotalScore = 0;
+            GameStage = -2;
             break;
         }
     }
-    else if (GameStage == -1) {
+    if (GameStage < 0) {
         switch (key)
         {
         case 'r':
@@ -116,13 +93,13 @@ void keyDown(unsigned char key, int x, int y) {
             TargetScoreDecay = 1 / pow(2, rand() % 3);
             break;
         case 'o':
-            TargetType = 2;
+            TargetType = rand() % 3;
             TargetDispenserOn = false;
             TDCoolDown = 0;
             TargetStackSpawn(TargetType, 16, 0, TargetSize, TargetStep, TargetScore, TargetScoreDecay);
             break;
         case 'p':
-            TargetType = 2;
+            TargetType = rand() % 3;
             TargetDispenserOn = !TargetDispenserOn;
             TDCoolDown = 0;
             for (int i = 0; i < TargetCnt; i++) {
@@ -130,18 +107,34 @@ void keyDown(unsigned char key, int x, int y) {
             }
             break;
         case 'l':
-            TargetSize = (float)(rand() % 10) / 100.0f + 0.1f;
+            if (GameStage == -1) TargetSize = (float)(rand() % 10) / 100.0f + 0.1f;
+            else if (GameStage == -2) {
+                if (TargetSize == 0) TargetSize = 1;
+                else TargetSize = 0;
+            }
             break;
         case 'k':
-            TargetStep = rand() % 4 + 1;
+            if (GameStage == -1) TargetStep = rand() % 4 + 1;
+            else if (GameStage == -2) {
+                if (TargetStep < 5) TargetStep++;
+                else TargetStep = 0;
+            }
             break;
         case 'n':
-            TargetScore = (rand() % 8 + 2) * 5;
+            if (GameStage == -1) TargetScore = (rand() % 8 + 2) * 5;
+            else if (GameStage == -2) {
+                if (TargetScore == 0) TargetScore = 10;
+                else if (TargetScore < 50) TargetScore += 5;
+                else TargetScore = 0;
+            }
             break;
         case 'm':
-            TargetScoreDecay = 1 / pow(2, rand() % 3);
-            break;
-        default:
+            if (GameStage == -1) TargetScoreDecay = 1 / pow(2, rand() % 3);
+            else if (GameStage == -2) {
+                if (TargetScoreDecay == 0) TargetScoreDecay = 0.125;
+                else if (TargetScoreDecay < 1) TargetScoreDecay *= 2;
+                else TargetScoreDecay = 0;
+            }
             break;
         }
     }
@@ -195,6 +188,7 @@ void mouseButtonCallback(int button, int state, int x, int y) {
                 // 점수 처리
                 float score = EvaluateTargetHitScore(camera, targetIndex);
                 if (score > 0) {
+                    TotalScore += score;
                     GameProgressCnt--;
                     if (GameStage > 0 && GameProgressCnt <= 0) GameProgress();
                 }
@@ -438,6 +432,7 @@ void render() {
 }
 
 void GameProgress() {
+    std::cout << "Stage" << GameStage << " Score: " << TotalScore << std::endl;
     switch (GameStage)
     {
     case 0:
@@ -477,7 +472,7 @@ void GameProgress() {
         break;
     case 5:
         TargetType = 1;
-        TargetStep = 4;
+        TargetStep = 5;
         TargetScoreDecay = 0.5;
         GameProgressCnt = 16;
         GameStage++;
@@ -516,7 +511,8 @@ void update(int value) {
         TDCoolDown++;
         if (TDCoolDown > 60) {
             TDCoolDown = 0;
-            TargetDispenser(TargetType, 0, TargetSize, TargetStep, TargetScore, TargetScoreDecay);
+            if (GameStage == 0) TargetDispenser();
+            else TargetDispenser(TargetType, 0, TargetSize, TargetStep, TargetScore, TargetScoreDecay);
         }
     }
 
