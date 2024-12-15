@@ -1,7 +1,4 @@
 #pragma once
-#include <glm/glm.hpp>
-#include <string>
-
 class Gun {
 public:
     Gun();

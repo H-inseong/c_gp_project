@@ -299,7 +299,7 @@ void render() {
     glutSwapBuffers();
 }
 
-void update() {
+void update(int value) {
     float currentFrame = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
@@ -317,13 +317,8 @@ void update() {
     }
 
     TargetTime();
-
     glutPostRedisplay();
-<<<<<<< Updated upstream
-=======
-
     glutTimerFunc(16, update, 1);
->>>>>>> Stashed changes
 }
 
 int main(int argc, char** argv) {
@@ -354,12 +349,9 @@ int main(int argc, char** argv) {
     glutSpecialFunc(specialKeyCallback);
 
     glutDisplayFunc(render);
-<<<<<<< Updated upstream
-    glutIdleFunc(update);
-=======
+
     //glutIdleFunc(update);
     glutTimerFunc(16, update, 1);
->>>>>>> Stashed changes
 
     glutMouseFunc(mouseButtonCallback);
     glutMotionFunc(mouseMotionCallback);
