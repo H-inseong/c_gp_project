@@ -88,7 +88,6 @@ void mouseButtonCallback(int button, int state, int x, int y) {
                 // 점수 처리
                 score += EvaluateTargetHitScore(camera, targetIndex);
                 std::cout << "Hit target " << targetIndex << " with score: " << score << std::endl;
-                PlaySound(L"Resource\\target-shot.wav", NULL, SND_FILENAME | SND_ASYNC);
             }
 
         }
@@ -181,19 +180,47 @@ void render() {
             for (int j = 0; j < tList[i].RangeStep; j++) {
                 float TargetSclae = (float)(tList[i].RangeStep - j) / (float)tList[i].RangeStep;
                 float slotScore =
-                    ScoreCaculate(tList[i].score, tList[i].RangeStep, j)
-                    - (tList[i].LiveTime / 4.0f);
+                    ScoreCaculate(tList[i].score, tList[i].RangeStep, j, (tList[i].LiveTime / 16.0f));
 
                 if (tList[i].Hit && tList[i].hitRange <= j) {
                     float HitScore =
-                        ScoreCaculate(tList[i].score, tList[i].RangeStep, tList[i].Hit)
-                        - (tList[i].LiveTime / 4.0f);
-                    if (tList[i].hitRange < j)
+                        ScoreCaculate(tList[i].score, tList[i].RangeStep, tList[i].hitRange, (tList[i].LiveTime / 16.0f));
+                    if (tList[i].hitRange < j) {
+                        switch (tList[i].Type)
+                        {
+                        case 1:
+                            target_shaderProgram->setVec4("FullBrightColor",
+                                1.0f,
+                                ScoreToColor(HitScore, 10, 0, 15),
+                                ScoreToColor(HitScore, 20, 0, 15),
+                                ScoreToColor(HitScore, 0, 0, 15)
+                            );
+                            break;
+                        case 2:
+                            target_shaderProgram->setVec4("FullBrightColor",
+                                ScoreToColor(HitScore, 20, 0, 15),
+                                ScoreToColor(HitScore, 10, 0, 15),
+                                1.0f,
+                                ScoreToColor(HitScore, 0, 0, 15)
+                            );
+                            break;
+                        default:
+                            target_shaderProgram->setVec4("FullBrightColor",
+                                ScoreToColor(HitScore, -10, 20),
+                                ScoreToColor(HitScore, 10, 30),
+                                ScoreToColor(HitScore, 20),
+                                ScoreToColor(HitScore, 0)
+                            );
+                            break;
+                        }
+                    }
+                    else if (tList[i].hitRange == tList[i].RangeStep && j == tList[i].RangeStep - 1) {
                         target_shaderProgram->setVec4("FullBrightColor",
                             ScoreToColor(HitScore, 50, 0, 25),
-                            ScoreToColor(HitScore, 25, 0, 25),
+                            ScoreToColor(HitScore, 25, 0, 25) / 2.0f + 0.5f,
                             ScoreToColor(HitScore, 50, 0, 25),
                             1.0f);
+                    }
                     else
                         target_shaderProgram->setVec4("FullBrightColor", 0.0f, 1.0f, 0.0f, 1.0f);
                 }
@@ -317,7 +344,9 @@ void update(int value) {
     }
 
     TargetTime();
+
     glutPostRedisplay();
+
     glutTimerFunc(16, update, 1);
 }
 
@@ -344,12 +373,13 @@ int main(int argc, char** argv) {
     mGun.init("Resource\\Gun.obj", "Resource\\Gun.jpg");
     mBackground.init("Resource\\background.obj", "Resource\\background.png");
 
+    TargetSpawn(rand() % 3, 16, 0, 0, 0, 1);
+
     glutKeyboardFunc(keyDown);
     glutKeyboardUpFunc(keyUp);
     glutSpecialFunc(specialKeyCallback);
 
     glutDisplayFunc(render);
-
     //glutIdleFunc(update);
     glutTimerFunc(16, update, 1);
 
