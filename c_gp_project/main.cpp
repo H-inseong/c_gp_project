@@ -9,7 +9,7 @@ Background mBackground;
 Crosshair mCrosshair;
 Gun mGun;
 
-int stage = 1; // 1:5x5사이즈 2:원운동 불사타겟 3:크기변화 타겟
+int stage = 2; // 1:5x5사이즈 2:원운동 불사타겟 3:크기변화 타겟
 float score = 0;
 
 float deltaTime = 0.0f;
@@ -36,8 +36,6 @@ void keyDown(unsigned char key, int x, int y) {
         switch (stage)
         {
         case 2:
-            TargetDispenserOn = false;
-            TDCoolDown = 0;
             //타겟전체 비활성화
             for (int i = 0; i < TargetCnt; i++) {
                 tList[i].Active = false;
@@ -68,15 +66,10 @@ void keyDown(unsigned char key, int x, int y) {
         }
         else {
             // 기존 stage1의 r 키 로직
-            TargetDispenserOn = false;
-            TDCoolDown = 0;
-            TargetStackSpawn(rand() % 3, 16, 0, 0, 0, 1);
         }
         break;
 
     case 'p':
-        TargetDispenserOn = !TargetDispenserOn;
-        TDCoolDown = 0;
         for (int i = 0; i < TargetCnt; i++) {
             tList[i].Active = false;
         }
@@ -391,13 +384,6 @@ void update(int value) {
     }
 
     TargetTime(stage);
-    if (TargetDispenserOn) {
-        TDCoolDown++;
-        if (TDCoolDown > 30) {
-            TDCoolDown = 0;
-            TargetDispenser(rand() % 3, 0, 0, 0, 1);
-        }
-    }
 
     glutPostRedisplay();
 
