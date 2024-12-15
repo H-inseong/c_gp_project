@@ -1,4 +1,7 @@
 #pragma once
+#include <GL/glm/glm.hpp>
+#include <string>
+
 class Gun {
 public:
     Gun();

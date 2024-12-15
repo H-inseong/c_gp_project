@@ -125,41 +125,29 @@ for (int i = 0; i < TargetCnt; i++) {
 
 */
 
-
-void TargetTime(int stage) {
-	float currentFrame = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
-	static float lastFrameLocal = currentFrame;
-	float localDeltaTime = currentFrame - lastFrameLocal;
-	lastFrameLocal = currentFrame;
-
+void TargetTime() {
 	for (int i = 0; i < TargetCnt; i++) {
 		if (tList[i].Active) {
-			// stage 2의 0번 타겟 특수 처리
-			if (stage == 2 && i == 0) { 				
-				directionChangeTimer += localDeltaTime;
-				if (directionChangeTimer >= 1.0f) {	// 1초마다 방향 랜덤 전환
-					directionChangeTimer = 0.0f;
-					orbitDirection = (rand() % 2 == 0) ? 1 : -1;
+			if (tList[i].Gravity) {
+				tList[i].speedy -= 0.0245f;
+			}
+			tList[i].x += tList[i].speedx;
+			tList[i].y += tList[i].speedy;
+			tList[i].z += tList[i].speedz;
+
+			if (tList[i].Invincible) {
+				tList[i].orbitTimer++;
+				if (tList[i].orbitTimer > 60) {
+					tList[i].orbitTimer = 0;
+					tList[i].orbitSpeed *= rand() % 2 * 2 - 1;
 				}
 
-				// 각도 변경
-				orbitAngle += orbitSpeed * orbitDirection * localDeltaTime;
-				// 위치 업데이트
-				tList[i].x = orbitRadius * cos(orbitAngle);
-				tList[i].z = orbitRadius * sin(orbitAngle);
-				tList[i].y = 2.0f;
-
-			//	tList[i].LiveTime += 0.25f;
-			//  크기 축소기능 제거
+				tList[i].orbitAngle += tList[i].orbitSpeed;
+				tList[i].x = tList[i].orbitRadius * cos(tList[i].orbitAngle * M_PI);
+				tList[i].y = 1.5f;
+				tList[i].z = tList[i].orbitRadius * sin(tList[i].orbitAngle * M_PI) + 5;
 			}
 			else {
-				if (tList[i].Gravity) {
-					tList[i].speedy -= 0.0245f;
-				}
-				tList[i].x += tList[i].speedx;
-				tList[i].y += tList[i].speedy;
-				tList[i].z += tList[i].speedz;
-
 				if (tList[i].Hit) {
 					tList[i].DeathTime += 0.25;
 					if (tList[i].DeathTime > 4 && !tList[i].Gravity) {
@@ -171,70 +159,108 @@ void TargetTime(int stage) {
 					if (tList[i].DeathTime > 60)
 						tList[i].Active = false;
 				}
-				else if (!tList[i].Invincible) {
-					if (tList[i].LiveTime < (tList[i].score + 10) * 16.0f) {
+				else if (tList[i].LiveTime < (tList[i].score + 10) * 16.0f) {
 						tList[i].LiveTime += 0.25;
-					}
-					else {
-						tList[i].Active = false;
-					}
+				}
+				else {
+					tList[i].Active = false;
 				}
 			}
 		}
 	}
 }
 
-void TargetSpawn(int Type, int Cnt, int RandomType,
-	int RangeStep, float Score, float Size) {
-
+void TargetPlace(int Num) {
 	int CoordStep = 100;
+	float
+		dis_x = 0,
+		dis_y = 0,
+		dis_z = 0,
+		Shell_Size = 0;
+
+	bool Collide = true;
+	int tryPlace = 0;
+
+	while (Collide || tryPlace > 1024) {
+		tList[Num].x = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 10;
+		tList[Num].y = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 2 + 3;
+		tList[Num].z = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep / 4.0f;
+		Collide = false;
+		tryPlace++;
+		for (int i = 0; i < TargetCnt; i++) {
+			if (tList[i].Active && i != Num) {
+				dis_x = tList[i].x - tList[Num].x,
+					dis_y = tList[i].y - tList[Num].y,
+					dis_z = tList[i].z - tList[Num].z,
+					Shell_Size = tList[i].size + tList[Num].size;
+				if (pow(dis_x, 2) + pow(dis_y, 2) + pow(dis_z, 2) < pow(Shell_Size, 2)) {
+					Collide = true;
+					break;
+				}
+			}
+		}
+	}
+}
+
+void TargetSpawn(int Num, int Type, int RandomType,
+	float Size, int RangeStep, float Score, float ScoreDecay) {
+	tList[Num].Active = true;
+	tList[Num].Hit = false;
+	tList[Num].hitRange = 0;
+	tList[Num].LiveTime = 0;
+	tList[Num].DeathTime = 0;
+	tList[Num].speedx = 0;
+	tList[Num].speedy = 0;
+	tList[Num].speedz = 0;
+	tList[Num].Gravity = false;
+
+	tList[Num].Type = Type;
+	tList[Num].scoreDecay = ScoreDecay;
+
+	if (Score == 0) {
+		if (RangeStep != 0) tList[Num].score = rand() % 40 + (RangeStep * 5);
+		else tList[Num].score = rand() % 40 + 10;
+	}
+	else tList[Num].score = Score;
+	if (RangeStep == 0) {
+		if (RandomType == 0) {
+			if (tList[Num].score > 10)
+				tList[Num].RangeStep = rand() % ((int)tList[Num].score / 5 - 1) + 2;
+			else if (tList[Num].score > 5) tList[Num].RangeStep = 2;
+			else tList[Num].RangeStep = 1;
+		}
+		else {
+			tList[Num].RangeStep = ((int)tList[Num].score / 5) + 1;
+		}
+	}
+	else tList[Num].RangeStep = RangeStep;
+	if (Size == 0) {
+		tList[Num].size = (float)(rand() % 10) / 100.0f + 0.1f;
+	}
+	else tList[Num].size = Size;
+
+	TargetPlace(Num);
+}
+
+void TargetStackSpawn(int Type, int Cnt, int RandomType,
+	float Size, int RangeStep, float Score, float ScoreDecay) {
 
 	int Tagets;
 	if (Cnt < TargetCnt) Tagets = Cnt;
 	else Tagets = TargetCnt;
 
 	for (int i = 0; i < Tagets; i++) {
-		tList[i].Active = true;
-		tList[i].Gravity = false;
+		TargetSpawn(i, Type, RandomType, Size, RangeStep, Score, ScoreDecay);
+	}
+}
 
-		tList[i].Hit = false;
-		tList[i].hitRange = 0;
-
-		//TargetList[i].Hit = true;
-		//TargetList[i].hitRange = 2;
-
-		tList[i].Type = Type;
-		tList[i].speedx = 0;
-		tList[i].speedy = 0;
-		tList[i].speedz = 0;
-
-		tList[i].LiveTime = 0;
-		tList[i].DeathTime = 0;
-
-		tList[i].x = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 4;
-		tList[i].y = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 2;
-		tList[i].z = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep / 4.0f;
-
-		if (Score == 0) {
-			tList[i].score = rand() % 40 + (RangeStep * 5);
+void TargetDispenser(int Type, int RandomType,
+	float Size, int RangeStep, float Score, float ScoreDecay) {
+	for (int i = 0; i < TargetCnt; i++) {
+		if (!tList[i].Active) {
+			TargetSpawn(i, Type, RandomType, Size, RangeStep, Score, ScoreDecay);
+			break;
 		}
-		else tList[i].score = Score;
-		if (RangeStep == 0) {
-			if (RandomType == 0) {
-				if (tList[i].score > 10)
-					tList[i].RangeStep = rand() % ((int)tList[i].score / 5 - 1) + 2;
-				else if (tList[i].score > 5) tList[i].RangeStep = 2;
-				else tList[i].RangeStep = 1;
-			}
-			else {
-				tList[i].RangeStep = ((int)tList[i].score / 5) + 1;
-			}
-		}
-		else tList[i].RangeStep = RangeStep;
-		if (Size == 0) {
-			tList[i].size = (float)(rand() % 10) / 100.0f + 0.1f;
-		}
-		else tList[i].size = Size;
 	}
 }
 
@@ -252,9 +278,12 @@ float ScoreToColor(float score, float Min, float Max, float Step) {
 }
 
 float ScoreCaculate(float Score, int RangeStep, int HitStep, float LiveTime) {
-	
-	if (RangeStep > 1) return (Score * (float)HitStep / (float)(RangeStep - 1)) + 5 - LiveTime;
-	else return Score + 5 - LiveTime;
+	if (RangeStep <= 1) Score + 5 - LiveTime;
+	else {
+		float returnScore = (Score * (float)HitStep / (float)(RangeStep - 1)) + 5 - LiveTime;
+		if (returnScore < 0) return returnScore * (LiveTime / 2 + 1);
+		else return returnScore;
+	}
 }
 
 int CheckCenterTarget(const Camera& camera) {
@@ -315,18 +344,21 @@ float EvaluateTargetHitScore(const Camera& camera, int targetIndex) {
 	// 어느 링에 맞았는지 판별
 	// j=0 : 가장 바깥쪽 링, j=(RangeStep-1) : 가장 안쪽 링
 	int hitRing = -1;
+	float hitScore = 0.0f;
 	for (int j = tList[targetIndex].RangeStep - 1; j > -1; j--) {
-		float ringRadius = ((float)(tList[targetIndex].RangeStep - j) / (float)tList[targetIndex].RangeStep) * tList[targetIndex].size;
-		
-		if (TargetHitCheck(camera, targetCenter, ringRadius)) {
-			hitRing = j;
-			break;
+		hitScore = ScoreCaculate(tList[targetIndex].score, tList[targetIndex].RangeStep, j, tList[targetIndex].LiveTime * tList[targetIndex].scoreDecay);
+		if (hitScore > 0.0f) {
+			float ringRadius = ((float)(tList[targetIndex].RangeStep - j) / (float)tList[targetIndex].RangeStep) * tList[targetIndex].size;
+			if (TargetHitCheck(camera, targetCenter, ringRadius)) {
+				hitRing = j;
+				break;
+			}
 		}
 	}
 	if (hitRing == -1) {
 		return 0.0f;
 	}
-	float hitScore = ScoreCaculate(tList[targetIndex].score, tList[targetIndex].RangeStep, hitRing, tList[targetIndex].LiveTime / 16.0f);
+	hitScore = ScoreCaculate(tList[targetIndex].score, tList[targetIndex].RangeStep, hitRing, tList[targetIndex].LiveTime * tList[targetIndex].scoreDecay);
 	tList[targetIndex].Hit = true;
 	tList[targetIndex].hitRange = hitRing;
 	return hitScore;
