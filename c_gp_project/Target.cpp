@@ -278,7 +278,7 @@ float ScoreToColor(float score, float Min, float Max, float Step) {
 }
 
 float ScoreCaculate(float Score, int RangeStep, int HitStep, float LiveTime) {
-	if (RangeStep <= 1) Score + 5 - LiveTime;
+	if (RangeStep <= 1) return Score + 5 - LiveTime;
 	else {
 		float returnScore = (Score * (float)HitStep / (float)(RangeStep - 1)) + 5 - LiveTime;
 		if (returnScore < 0) return returnScore * (LiveTime / 2 + 1);
@@ -355,6 +355,7 @@ float EvaluateTargetHitScore(const Camera& camera, int targetIndex) {
 			}
 		}
 	}
+
 	if (hitRing == -1) {
 		return 0.0f;
 	}
