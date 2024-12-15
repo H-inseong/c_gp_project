@@ -28,12 +28,24 @@ glm::vec3 lightPos(0.0f, 20.0f, 0.0f);
 
 bool keys[256] = { false };
 
+bool TargetDispenserOn = false;
+int TDCoolDown = 0;
+
 void keyDown(unsigned char key, int x, int y) {
     keys[key] = true;
     switch (key)
     {
     case 'r':
-        TargetSpawn(rand() % 3, 16, 0, 0, 0, 1);
+        TargetDispenserOn = false;
+        TDCoolDown = 0;
+        TargetStackSpawn(rand() % 3, 16, 0, 0, 0, 1);
+        break;
+    case 'p':
+        TargetDispenserOn = !TargetDispenserOn;
+        TDCoolDown = 0;
+        for (int i = 0; i < TargetCnt; i++) {
+            tList[i].Active = false;
+        }
         break;
     default:
         break;
@@ -179,12 +191,11 @@ void render() {
 
             for (int j = 0; j < tList[i].RangeStep; j++) {
                 float TargetSclae = (float)(tList[i].RangeStep - j) / (float)tList[i].RangeStep;
-                float slotScore =
-                    ScoreCaculate(tList[i].score, tList[i].RangeStep, j, (tList[i].LiveTime / 16.0f));
+                float slotScore = ScoreCaculate(tList[i].score, tList[i].RangeStep, j, (tList[i].LiveTime * tList[i].scoreDecay));
 
                 if (tList[i].Hit && tList[i].hitRange <= j) {
                     float HitScore =
-                        ScoreCaculate(tList[i].score, tList[i].RangeStep, tList[i].hitRange, (tList[i].LiveTime / 16.0f));
+                        ScoreCaculate(tList[i].score, tList[i].RangeStep, tList[i].hitRange, (tList[i].LiveTime * tList[i].scoreDecay));
                     if (tList[i].hitRange < j) {
                         switch (tList[i].Type)
                         {
@@ -214,7 +225,7 @@ void render() {
                             break;
                         }
                     }
-                    else if (tList[i].hitRange == tList[i].RangeStep && j == tList[i].RangeStep - 1) {
+                    else if (tList[i].hitRange == tList[i].RangeStep - 1 && j == tList[i].RangeStep - 1) {
                         target_shaderProgram->setVec4("FullBrightColor",
                             ScoreToColor(HitScore, 50, 0, 25),
                             ScoreToColor(HitScore, 25, 0, 25) / 2.0f + 0.5f,
@@ -263,16 +274,17 @@ void render() {
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
-                if (tList[i].Hit && tList[i].hitRange > j) {
-                    if (tList[i].DeathTime < 4) {
-                        float StepScale = j + ((tList[i].hitRange - j) * (tList[i].DeathTime / 4.0f));
-                        TargetSclae = (float)(tList[i].RangeStep - StepScale) / (float)tList[i].RangeStep;
+                if (TargetSclae > 0) {
+                    if (tList[i].Hit && tList[i].hitRange > j) {
+                        if (tList[i].DeathTime < 4) {
+                            float StepScale = j + ((tList[i].hitRange - j) * (tList[i].DeathTime / 4.0f));
+                            TargetSclae = (float)(tList[i].RangeStep - StepScale) / (float)tList[i].RangeStep;
+                            gluSphere(qobj, TargetSclae, 16, 8);
+                        }
+                    }
+                    else {
                         gluSphere(qobj, TargetSclae, 16, 8);
                     }
-                }
-                else if (TargetSclae > 0) {
-                    gluSphere(qobj, TargetSclae, 16, 8);
                 }
                 glDisable(GL_BLEND);
             }
@@ -344,6 +356,13 @@ void update(int value) {
     }
 
     TargetTime();
+    if (TargetDispenserOn) {
+        TDCoolDown++;
+        if (TDCoolDown > 30) {
+            TDCoolDown = 0;
+            TargetDispenser(rand() % 3, 0, 0, 0, 1);
+        }
+    }
 
     glutPostRedisplay();
 
@@ -373,7 +392,7 @@ int main(int argc, char** argv) {
     mGun.init("Resource\\Gun.obj", "Resource\\Gun.jpg");
     mBackground.init("Resource\\background.obj", "Resource\\background.png");
 
-    TargetSpawn(rand() % 3, 16, 0, 0, 0, 1);
+    TargetStackSpawn(rand() % 3, 16, 0, 0, 0, 1);
 
     glutKeyboardFunc(keyDown);
     glutKeyboardUpFunc(keyUp);
