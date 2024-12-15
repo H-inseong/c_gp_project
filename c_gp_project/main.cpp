@@ -4,7 +4,7 @@ GLuint VAO, VBO;
 Shader* shaderProgram;
 Shader* target_shaderProgram;
 
-Camera camera(glm::vec3(0.0f, 3.0f, 10.0f));
+Camera camera(glm::vec3(0.0f, 3.0f, 0.0f));
 Background mBackground;
 Crosshair mCrosshair;
 Gun mGun;
@@ -33,7 +33,53 @@ void keyDown(unsigned char key, int x, int y) {
     switch (key)
     {
     case 'r':
-        TargetSpawn(rand() % 3, 16, 0, 0, 0, 1);
+        switch (stage)
+        {
+        case 2:
+            TargetDispenserOn = false;
+            TDCoolDown = 0;
+            //타겟전체 비활성화
+            for (int i = 0; i < TargetCnt; i++) {
+                tList[i].Active = false;
+                tList[i].Hit = false;
+            }
+            //0번 타겟만 활성화
+            tList[0].Active = true;
+            tList[0].Invincible = true;
+            tList[0].RangeStep = 3;
+            tList[0].score = 30.0f;      // 점수
+            tList[0].size = 1.0f;
+            tList[0].x = orbitRadius;
+            tList[0].y = 1.0f;
+            tList[0].z = 0.0f;
+            tList[0].Hit = false;
+            tList[0].DeathTime = 0.0f;
+            tList[0].LiveTime = 0.0f;
+            tList[0].Gravity = false;
+
+            orbitAngle = 0.0f;
+            directionChangeTimer = 0.0f;
+        default:
+            break;
+        }
+        if (stage == 2) {
+            
+
+        }
+        else {
+            // 기존 stage1의 r 키 로직
+            TargetDispenserOn = false;
+            TDCoolDown = 0;
+            TargetStackSpawn(rand() % 3, 16, 0, 0, 0, 1);
+        }
+        break;
+
+    case 'p':
+        TargetDispenserOn = !TargetDispenserOn;
+        TDCoolDown = 0;
+        for (int i = 0; i < TargetCnt; i++) {
+            tList[i].Active = false;
+        }
         break;
     default:
         break;
@@ -88,6 +134,7 @@ void mouseButtonCallback(int button, int state, int x, int y) {
                 // 점수 처리
                 score += EvaluateTargetHitScore(camera, targetIndex);
                 std::cout << "Hit target " << targetIndex << " with score: " << score << std::endl;
+                if (stage != 2) tList[targetIndex].Hit = true;
             }
 
         }
@@ -160,11 +207,12 @@ void render() {
     //GLU_FILL | 솔리드스타일 / GLU_LINE | 와이어프레임 / GLU_SILHOUETTE | 선으로외부모서리만 / GLU_POINT | 점
     gluQuadricNormals(qobj, GLU_SMOOTH);
     gluQuadricOrientation(qobj, GLU_OUTSIDE);
+
     for (int i = 0; i < TargetCnt; i++) {
         if (tList[i].Active) {
             glFrontFace(GL_CW);
             model = glm::mat4(1.0f);
-
+            
             if (tList[i].Hit && tList[i].DeathTime > 4) {
                 model = glm::translate(model, glm::vec3(tList[i].x,
                     tList[i].y + ((4.0f - tList[i].DeathTime) / 60.0f),
@@ -173,7 +221,6 @@ void render() {
             else {
                 model = glm::translate(model, glm::vec3(tList[i].x, tList[i].y, tList[i].z));
             }
-
             model = glm::scale(model, glm::vec3(tList[i].size));
             target_shaderProgram->setMat4("model", glm::value_ptr(model));
 
@@ -290,8 +337,8 @@ void render() {
     shaderProgram->setInt("texture1", 0);
     shaderProgram->setMat4("model", glm::value_ptr(model));
     {
-        glm::mat4 backgroundModel = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f));
-        backgroundModel = glm::translate(backgroundModel, glm::vec3(0.0f, 0.0f, 5.0f));
+        glm::mat4 backgroundModel = glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
+        backgroundModel = glm::translate(backgroundModel, glm::vec3(0.0f, 0.0f, 4.0f));
         shaderProgram->setMat4("model", glm::value_ptr(backgroundModel));
         mBackground.draw(view, projection);
     }
@@ -343,7 +390,14 @@ void update(int value) {
         }
     }
 
-    TargetTime();
+    TargetTime(stage);
+    if (TargetDispenserOn) {
+        TDCoolDown++;
+        if (TDCoolDown > 30) {
+            TDCoolDown = 0;
+            TargetDispenser(rand() % 3, 0, 0, 0, 1);
+        }
+    }
 
     glutPostRedisplay();
 

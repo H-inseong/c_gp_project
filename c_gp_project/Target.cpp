@@ -125,33 +125,59 @@ for (int i = 0; i < TargetCnt; i++) {
 
 */
 
-void TargetTime() {
+
+void TargetTime(int stage) {
+	float currentFrame = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
+	static float lastFrameLocal = currentFrame;
+	float localDeltaTime = currentFrame - lastFrameLocal;
+	lastFrameLocal = currentFrame;
+
 	for (int i = 0; i < TargetCnt; i++) {
 		if (tList[i].Active) {
-			if (tList[i].Gravity) {
-				tList[i].speedy -= 0.0245f;
-			}
-			tList[i].x += tList[i].speedx;
-			tList[i].y += tList[i].speedy;
-			tList[i].z += tList[i].speedz;
+			// stage 2의 0번 타겟 특수 처리
+			if (stage == 2 && i == 0) { 				
+				directionChangeTimer += localDeltaTime;
+				if (directionChangeTimer >= 1.0f) {	// 1초마다 방향 랜덤 전환
+					directionChangeTimer = 0.0f;
+					orbitDirection = (rand() % 2 == 0) ? 1 : -1;
+				}
 
-			if (tList[i].Hit) {
-				tList[i].DeathTime += 0.25;
-				if (tList[i].DeathTime > 4 && !tList[i].Gravity) {
-					tList[i].Gravity = true;
-					tList[i].speedx += (float)((rand() % 10) - 5) / 100.0f;
-					tList[i].speedy += (float)(rand() % 10) / 100.0f + 0.1f;
-					tList[i].speedz += (float)((rand() % 10) - 5) / 100.0f;
-				}
-				if (tList[i].DeathTime > 60)
-					tList[i].Active = false;
+				// 각도 변경
+				orbitAngle += orbitSpeed * orbitDirection * localDeltaTime;
+				// 위치 업데이트
+				tList[i].x = orbitRadius * cos(orbitAngle);
+				tList[i].z = orbitRadius * sin(orbitAngle);
+				tList[i].y = 2.0f;
+
+			//	tList[i].LiveTime += 0.25f;
+			//  크기 축소기능 제거
 			}
-			else if (!tList[i].Invincible) {
-				if (tList[i].LiveTime < (tList[i].score + 10) * 16.0f) {
-					tList[i].LiveTime += 0.25;
+			else {
+				if (tList[i].Gravity) {
+					tList[i].speedy -= 0.0245f;
 				}
-				else {
-					tList[i].Active = false;
+				tList[i].x += tList[i].speedx;
+				tList[i].y += tList[i].speedy;
+				tList[i].z += tList[i].speedz;
+
+				if (tList[i].Hit) {
+					tList[i].DeathTime += 0.25;
+					if (tList[i].DeathTime > 4 && !tList[i].Gravity) {
+						tList[i].Gravity = true;
+						tList[i].speedx += (float)((rand() % 10) - 5) / 100.0f;
+						tList[i].speedy += (float)(rand() % 10) / 100.0f + 0.1f;
+						tList[i].speedz += (float)((rand() % 10) - 5) / 100.0f;
+					}
+					if (tList[i].DeathTime > 60)
+						tList[i].Active = false;
+				}
+				else if (!tList[i].Invincible) {
+					if (tList[i].LiveTime < (tList[i].score + 10) * 16.0f) {
+						tList[i].LiveTime += 0.25;
+					}
+					else {
+						tList[i].Active = false;
+					}
 				}
 			}
 		}

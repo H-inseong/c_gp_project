@@ -16,10 +16,10 @@
 // OpenGL
 #include <GL/glew.h>
 #include <GL/freeglut.h>
-
 #include <GL/glm/glm.hpp>
 #include <GL/glm/gtc/matrix_transform.hpp>
 #include <GL/glm/gtc/type_ptr.hpp>
+
 #include "tiny_obj_loader.h"
 #include "stb_image.h"
 
