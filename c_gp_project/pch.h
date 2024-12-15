@@ -1,6 +1,7 @@
 #ifndef PCH_H
 #define PCH_H
 
+#define _CRT_SECURE_NO_WARNINGS
 #define SCREEN_WIDTH 1920 
 #define SCREEN_HEIGHT 1080
 

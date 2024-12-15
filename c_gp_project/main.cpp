@@ -246,7 +246,43 @@ void keepMouseCentered() {
     int centerY = SCREEN_HEIGHT / 2;
     glutWarpPointer(centerX, centerY);
 }
+void renderBitmapString(float x, float y, void* font, const char* string) {
+    glRasterPos2f(x, y);
+    while (*string) {
+        glutBitmapCharacter(font, *string);
+        ++string;
+    }
+}
 
+void drawScore(float score) {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glDisable(GL_DEPTH_TEST);
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+    char scoreText[32];
+    sprintf(scoreText, "Score: %.2f", score);
+
+    // 화면 왼쪽 상단에 점수 표시
+    //폰트 2종류: 가장 오른쪽 숫자가 폰트 크기
+    //GLUT_BITMAP_TIMES_ROMAN_24
+    //GLUT_BITMAP_HELVETICA_18
+    renderBitmapString(20.0f, SCREEN_HEIGHT - 30.0f, GLUT_BITMAP_HELVETICA_18, scoreText);
+
+    glEnable(GL_DEPTH_TEST);
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+}
 void render() {
 
 
@@ -435,6 +471,8 @@ void render() {
     }
     mCrosshair.draw();
 
+    glUseProgram(0);
+    drawScore(TotalScore);
     glutSwapBuffers();
 }
 
@@ -566,7 +604,7 @@ void update(int value) {
 
     glutPostRedisplay();
 
-    glutTimerFunc(25, update, 1);
+    glutTimerFunc(16, update, 1);
 }
 
 int main(int argc, char** argv) {
@@ -601,7 +639,7 @@ int main(int argc, char** argv) {
 
     glutDisplayFunc(render);
     //glutIdleFunc(update);
-    glutTimerFunc(25, update, 1);
+    glutTimerFunc(16, update, 1);
 
     glutMouseFunc(mouseButtonCallback);
     glutMotionFunc(mouseMotionCallback);
