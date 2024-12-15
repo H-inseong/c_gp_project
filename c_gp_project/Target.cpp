@@ -125,7 +125,6 @@ for (int i = 0; i < TargetCnt; i++) {
 
 */
 
-
 void TargetTime() {
 	for (int i = 0; i < TargetCnt; i++) {
 		if (tList[i].Active) {
@@ -136,20 +135,32 @@ void TargetTime() {
 			tList[i].y += tList[i].speedy;
 			tList[i].z += tList[i].speedz;
 
-			if (tList[i].Hit) {
-				tList[i].DeathTime += 0.25;
-				if (tList[i].DeathTime > 4 && !tList[i].Gravity) {
-					tList[i].Gravity = true;
-					tList[i].speedx += (float)((rand() % 10) - 5) / 100.0f;
-					tList[i].speedy += (float)(rand() % 10) / 100.0f + 0.1f;
-					tList[i].speedz += (float)((rand() % 10) - 5) / 100.0f;
+			if (tList[i].Invincible) {
+				tList[i].orbitTimer++;
+				if (tList[i].orbitTimer > 60) {
+					tList[i].orbitTimer = 0;
+					tList[i].orbitSpeed *= rand() % 2 * 2 - 1;
 				}
-				if (tList[i].DeathTime > 60)
-					tList[i].Active = false;
+
+				tList[i].orbitAngle += tList[i].orbitSpeed;
+				tList[i].x = tList[i].orbitRadius * cos(tList[i].orbitAngle * M_PI);
+				tList[i].y = 1.5f;
+				tList[i].z = tList[i].orbitRadius * sin(tList[i].orbitAngle * M_PI) + 5;
 			}
-			else if (!tList[i].Invincible) {
-				if (tList[i].LiveTime < (tList[i].score + 10) * 16.0f) {
-					tList[i].LiveTime += 0.25;
+			else {
+				if (tList[i].Hit) {
+					tList[i].DeathTime += 0.25;
+					if (tList[i].DeathTime > 4 && !tList[i].Gravity) {
+						tList[i].Gravity = true;
+						tList[i].speedx += (float)((rand() % 10) - 5) / 100.0f;
+						tList[i].speedy += (float)(rand() % 10) / 100.0f + 0.1f;
+						tList[i].speedz += (float)((rand() % 10) - 5) / 100.0f;
+					}
+					if (tList[i].DeathTime > 60)
+						tList[i].Active = false;
+				}
+				else if (tList[i].LiveTime < (tList[i].score + 10) * 16.0f) {
+						tList[i].LiveTime += 0.25;
 				}
 				else {
 					tList[i].Active = false;

@@ -4,6 +4,8 @@
 #define SCREEN_WIDTH 1920 
 #define SCREEN_HEIGHT 1080
 
+#define _USE_MATH_DEFINES
+
 #include <iostream>
 #include <string>
 #include <fstream>

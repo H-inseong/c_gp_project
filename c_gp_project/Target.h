@@ -5,6 +5,7 @@ struct Target {
 	float x = 0.0f, y = 0.0f, z = 0.0f,
 		speedx = 0.0f, speedy = 0.0f, speedz = 0.0f,
 		score = 1.0f, scoreDecay = 0.25f, size = 0.2f, LiveTime = 0.0f, DeathTime = 0.0f;
+	float orbitAngle = 0.0f, orbitSpeed = 0.0f, orbitTimer = 0.0f, orbitRadius = 5.0f;
 };
 
 extern Target tList[16];

@@ -187,7 +187,7 @@ void mouseButtonCallback(int button, int state, int x, int y) {
             if (targetIndex != -1) {
                 // 痢荐 贸府
                 float score = EvaluateTargetHitScore(camera, targetIndex);
-                if (score > 0) {
+                if (score > 0 && GameStage != 4) {
                     TotalScore += score;
                     GameProgressCnt--;
                     if (GameStage > 0 && GameProgressCnt <= 0) GameProgress();
@@ -231,6 +231,13 @@ void mouseMotionCallback(int x, int y) {
 
         camera.processMouseMovement(xOffset, yOffset);
         glutWarpPointer(centerX, centerY);
+        if (GameStage == 4) {
+            int targetIndex = CheckCenterTarget(camera);
+            if (targetIndex != -1) {
+                // 痢荐 贸府
+                float score = EvaluateTargetHitScore(camera, targetIndex);
+            }
+        }
     }
 }
 
@@ -286,7 +293,7 @@ void render() {
                 float TargetSclae = (float)(tList[i].RangeStep - j) / (float)tList[i].RangeStep;
                 float slotScore = ScoreCaculate(tList[i].score, tList[i].RangeStep, j, (tList[i].LiveTime * tList[i].scoreDecay));
 
-                if (tList[i].Hit && tList[i].hitRange <= j) {
+                if ((tList[i].Hit || (tList[i].Invincible && tList[i].hitRange > 0)) && tList[i].hitRange <= j) {
                     float HitScore =
                         ScoreCaculate(tList[i].score, tList[i].RangeStep, tList[i].hitRange, (tList[i].LiveTime * tList[i].scoreDecay));
                     if (tList[i].hitRange < j) {
@@ -438,6 +445,7 @@ void GameProgress() {
     case 0:
         TargetType = 0;
         TargetStep = 1;
+        TargetScore = 6.25;
         TargetScoreDecay = 0;
         GameProgressCnt = 4;
         GameStage++;
@@ -445,6 +453,7 @@ void GameProgress() {
     case 1:
         TargetType = 0;
         TargetStep = 2;
+        TargetScore = 12.5;
         TargetScoreDecay = 0;
         GameProgressCnt = 8;
         GameStage++;
@@ -452,6 +461,7 @@ void GameProgress() {
     case 2:
         TargetType = 0;
         TargetStep = 4;
+        TargetScore = 25;
         TargetScoreDecay = 0;
         GameProgressCnt = 16;
         GameStage++;
@@ -459,13 +469,15 @@ void GameProgress() {
     case 3:
         TargetType = 2;
         TargetStep = 4;
+        TargetScore = 0.01;
         TargetScoreDecay = 0;
-        GameProgressCnt = 16;
+        GameProgressCnt = 360;
         GameStage++;
         break;
     case 4:
         TargetType = 1;
         TargetStep = 4;
+        TargetScore = 25;
         TargetScoreDecay = 0.25;
         GameProgressCnt = 16;
         GameStage++;
@@ -473,6 +485,7 @@ void GameProgress() {
     case 5:
         TargetType = 1;
         TargetStep = 5;
+        TargetScore = 25;
         TargetScoreDecay = 0.5;
         GameProgressCnt = 16;
         GameStage++;
@@ -507,12 +520,47 @@ void update(int value) {
     }
 
     TargetTime();
-    if (TargetDispenserOn) {
-        TDCoolDown++;
-        if (TDCoolDown > 60) {
-            TDCoolDown = 0;
-            if (GameStage == 0) TargetDispenser();
-            else TargetDispenser(TargetType, 0, TargetSize, TargetStep, TargetScore, TargetScoreDecay);
+
+    if (GameStage == 4) {
+        if (!tList[0].Invincible && !tList[0].Active) {
+            tList[0].Type = 2;
+            tList[0].RangeStep = 4;
+            tList[0].score = 20;
+            tList[0].scoreDecay = 0;
+            tList[0].size = 1;
+            tList[0].DeathTime = 0;
+            tList[0].LiveTime = 0;
+            tList[0].hitRange = -1;
+            tList[0].orbitAngle = 1.5;
+            tList[0].orbitSpeed = 0.0025;
+            tList[0].Gravity = false;
+            tList[0].Active = true;
+            tList[0].Invincible = true;
+        }
+        if (tList[0].Invincible) {
+            GameProgressCnt--;
+            if (tList[0].Hit) {
+                if (GameProgressCnt < 0) {
+                    tList[0].Invincible = false;
+                    GameProgress();
+                }
+                else {
+                    std::cout << "Remains" << GameProgressCnt << " Score: " << TotalScore << std::endl;
+                    TotalScore += ScoreCaculate(0.25f, tList[0].RangeStep, tList[0].hitRange, 5);
+                    tList[0].Hit = false;
+                }
+            }
+            else tList[0].hitRange = -1;
+        }
+    }
+    else {
+        if (TargetDispenserOn) {
+            TDCoolDown++;
+            if (TDCoolDown > 60) {
+                TDCoolDown = 0;
+                if (GameStage == 0) TargetDispenser();
+                else TargetDispenser(TargetType, 0, TargetSize, TargetStep, TargetScore, TargetScoreDecay);
+            }
         }
     }
 
