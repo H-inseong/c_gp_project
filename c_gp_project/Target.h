@@ -15,12 +15,12 @@ extern GLUquadricObj* qobj;
 void TargetTime();
 void TargetPlace(int Num);
 
-void TargetSpawn(int Num, int Type, int RandomType,
-	int RangeStep, float Score, float Size);
-void TargetStackSpawn(int Type = 0, int Cnt = 1, int RandomType = 0,
-int RangeStep = 0, float Score = 0, float Size = 0);
-void TargetDispenser(int Type, int RandomType,
-	int RangeStep, float Score, float Size);
+void TargetSpawn(int Num, int Type = 0, int RandomType = 0,
+	float Size = 0, int RangeStep = 0, float Score = 0, float ScoreDecay = 0);
+void TargetStackSpawn(int Type = 0, int Cnt = 1, int RandomType = 0, 
+float Size = 0, int RangeStep = 0, float Score = 0, float ScoreDecay = 0);
+void TargetDispenser(int Type = 0, int RandomType = 0,
+	float Size = 0, int RangeStep = 0, float Score = 0, float ScoreDecay = 0);
 
 float ScoreToColor(float score, float Min = 0, float Max = 0, float Step = 10.0f);
 float ScoreCaculate(float Score, int RangeStep, int HitStep, float LiveTime);

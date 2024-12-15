@@ -28,27 +28,122 @@ glm::vec3 lightPos(0.0f, 20.0f, 0.0f);
 
 bool keys[256] = { false };
 
-bool TargetDispenserOn = false;
+int GameStage = -2;
+// -2: 샌드박스 | -1: 완전 랜덤 모드 | 0: 랜덤모드 |
+// 1: 부패 = 0, 단계 = 1, 개수 = 4 | 2: 부패 = 0, 단계 2, 개수 = 8 | 3: 부패 = 0, 단계 4, 개수 = 16 |
+// 4: 트래킹 모드, 개수 = 16 | 5: 부패 = 0.25, 단계 4, 개수 = 16 | 6: 부패 0.5, 단계 4, 개수 = 16
+
+int GameProgressCnt = 0;
+
+bool TargetDispenserOn = true;
 int TDCoolDown = 0;
+
+int TargetType = 0;
+int TargetStep = 4;
+float TargetSize = 1;
+float TargetScore = 25;
+float TargetScoreDecay = 0;
+
+void GameProgress();
 
 void keyDown(unsigned char key, int x, int y) {
     keys[key] = true;
-    switch (key)
-    {
-    case 'r':
-        TargetDispenserOn = false;
-        TDCoolDown = 0;
-        TargetStackSpawn(rand() % 3, 16, 0, 0, 0, 1);
-        break;
-    case 'p':
-        TargetDispenserOn = !TargetDispenserOn;
-        TDCoolDown = 0;
-        for (int i = 0; i < TargetCnt; i++) {
-            tList[i].Active = false;
+
+    if (GameStage == -2) {
+        switch (key)
+        {
+        case 'o':
+            TargetType = rand() % 3;
+            TargetDispenserOn = false;
+            TDCoolDown = 0;
+            TargetStackSpawn(TargetType, 16, 0, TargetSize, TargetStep, TargetScore, TargetScoreDecay);
+            break;
+        case 'p':
+            TargetType = rand() % 3;
+            TargetDispenserOn = !TargetDispenserOn;
+            TDCoolDown = 0;
+            for (int i = 0; i < TargetCnt; i++) {
+                tList[i].Active = false;
+            }
+            break;
+        case 'l':
+            if (TargetSize == 0) {
+                TargetSize = 1;
+            }
+            else TargetSize = 0;
+            break;
+        case 'k':
+            if (TargetStep < 5) {
+                TargetStep++;
+            }
+            else TargetStep = 0;
+            break;
+        case 'n':
+            if (TargetScore == 0) {
+                TargetScore = 10;
+            }
+            else if (TargetScore < 50) {
+                TargetScore += 5;
+            }
+            else TargetScore = 0;
+            break;
+        case 'm':
+            if (TargetScoreDecay == 0) {
+                TargetScoreDecay = 0.125;
+            }
+            else if (TargetScoreDecay == 0.125) {
+                TargetScoreDecay = 0.25;
+            }
+            else if (TargetScoreDecay == 0.25) {
+                TargetScoreDecay = 0.5;
+            }
+            else if (TargetScoreDecay == 0.5) {
+                TargetScoreDecay = 1.0;
+            }
+            else TargetScoreDecay = 0;
+            break;
+        default:
+            break;
         }
-        break;
-    default:
-        break;
+    }
+    else if (GameStage == -1) {
+        switch (key)
+        {
+        case 'r':
+            TargetSize = (float)(rand() % 10) / 100.0f + 0.1f;
+            TargetStep = rand() % 4 + 1;
+            TargetScore = (rand() % 8 + 2) * 5;
+            TargetScoreDecay = 1 / pow(2, rand() % 3);
+            break;
+        case 'o':
+            TargetType = 2;
+            TargetDispenserOn = false;
+            TDCoolDown = 0;
+            TargetStackSpawn(TargetType, 16, 0, TargetSize, TargetStep, TargetScore, TargetScoreDecay);
+            break;
+        case 'p':
+            TargetType = 2;
+            TargetDispenserOn = !TargetDispenserOn;
+            TDCoolDown = 0;
+            for (int i = 0; i < TargetCnt; i++) {
+                tList[i].Active = false;
+            }
+            break;
+        case 'l':
+            TargetSize = (float)(rand() % 10) / 100.0f + 0.1f;
+            break;
+        case 'k':
+            TargetStep = rand() % 4 + 1;
+            break;
+        case 'n':
+            TargetScore = (rand() % 8 + 2) * 5;
+            break;
+        case 'm':
+            TargetScoreDecay = 1 / pow(2, rand() % 3);
+            break;
+        default:
+            break;
+        }
     }
 }
 
@@ -99,6 +194,10 @@ void mouseButtonCallback(int button, int state, int x, int y) {
             if (targetIndex != -1) {
                 // 점수 처리
                 float score = EvaluateTargetHitScore(camera, targetIndex);
+                if (score > 0) {
+                    GameProgressCnt--;
+                    if (GameStage > 0 && GameProgressCnt <= 0) GameProgress();
+                }
                 std::cout << "Hit target " << targetIndex << " with score: " << score << std::endl;
             }
 
@@ -338,6 +437,63 @@ void render() {
     glutSwapBuffers();
 }
 
+void GameProgress() {
+    switch (GameStage)
+    {
+    case 0:
+        TargetType = 0;
+        TargetStep = 1;
+        TargetScoreDecay = 0;
+        GameProgressCnt = 4;
+        GameStage++;
+        break;
+    case 1:
+        TargetType = 0;
+        TargetStep = 2;
+        TargetScoreDecay = 0;
+        GameProgressCnt = 8;
+        GameStage++;
+        break;
+    case 2:
+        TargetType = 0;
+        TargetStep = 4;
+        TargetScoreDecay = 0;
+        GameProgressCnt = 16;
+        GameStage++;
+        break;
+    case 3:
+        TargetType = 2;
+        TargetStep = 4;
+        TargetScoreDecay = 0;
+        GameProgressCnt = 16;
+        GameStage++;
+        break;
+    case 4:
+        TargetType = 1;
+        TargetStep = 4;
+        TargetScoreDecay = 0.25;
+        GameProgressCnt = 16;
+        GameStage++;
+        break;
+    case 5:
+        TargetType = 1;
+        TargetStep = 4;
+        TargetScoreDecay = 0.5;
+        GameProgressCnt = 16;
+        GameStage++;
+        break;
+    case 6:
+        TargetType = 0;
+        TargetStep = 0;
+        TargetSize = 0;
+        TargetScore = 0;
+        TargetScoreDecay = 1;
+        break;
+    default:
+        break;
+    }
+}
+
 void update(int value) {
     float currentFrame = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
     deltaTime = currentFrame - lastFrame;
@@ -358,9 +514,9 @@ void update(int value) {
     TargetTime();
     if (TargetDispenserOn) {
         TDCoolDown++;
-        if (TDCoolDown > 30) {
+        if (TDCoolDown > 60) {
             TDCoolDown = 0;
-            TargetDispenser(rand() % 3, 0, 0, 0, 1);
+            TargetDispenser(TargetType, 0, TargetSize, TargetStep, TargetScore, TargetScoreDecay);
         }
     }
 
@@ -392,7 +548,8 @@ int main(int argc, char** argv) {
     mGun.init("Resource\\Gun.obj", "Resource\\Gun.jpg");
     mBackground.init("Resource\\background.obj", "Resource\\background.png");
 
-    TargetStackSpawn(rand() % 3, 16, 0, 0, 0, 1);
+    GameStage = 0;
+    GameProgress();
 
     glutKeyboardFunc(keyDown);
     glutKeyboardUpFunc(keyUp);

@@ -168,11 +168,14 @@ void TargetPlace(int Num) {
 		Shell_Size = 0;
 
 	bool Collide = true;
-	while (Collide) {
+	int tryPlace = 0;
+
+	while (Collide || tryPlace > 1024) {
 		tList[Num].x = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 8;
 		tList[Num].y = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep * 2 + 3;
 		tList[Num].z = (float)(rand() % CoordStep * 2 - CoordStep) / (float)CoordStep / 4.0f;
 		Collide = false;
+		tryPlace++;
 		for (int i = 0; i < TargetCnt; i++) {
 			if (tList[i].Active && i != Num) {
 				dis_x = tList[i].x - tList[Num].x,
@@ -189,7 +192,7 @@ void TargetPlace(int Num) {
 }
 
 void TargetSpawn(int Num, int Type, int RandomType,
-	int RangeStep, float Score, float Size) {
+	float Size, int RangeStep, float Score, float ScoreDecay) {
 	tList[Num].Active = true;
 	tList[Num].Hit = false;
 	tList[Num].hitRange = 0;
@@ -201,7 +204,8 @@ void TargetSpawn(int Num, int Type, int RandomType,
 	tList[Num].Gravity = false;
 
 	tList[Num].Type = Type;
-	tList[Num].scoreDecay = 0.25f;
+	tList[Num].scoreDecay = ScoreDecay;
+
 	if (Score == 0) {
 		if (RangeStep != 0) tList[Num].score = rand() % 40 + (RangeStep * 5);
 		else tList[Num].score = rand() % 40 + 10;
@@ -228,22 +232,22 @@ void TargetSpawn(int Num, int Type, int RandomType,
 }
 
 void TargetStackSpawn(int Type, int Cnt, int RandomType,
-	int RangeStep, float Score, float Size) {
+	float Size, int RangeStep, float Score, float ScoreDecay) {
 
 	int Tagets;
 	if (Cnt < TargetCnt) Tagets = Cnt;
 	else Tagets = TargetCnt;
 
 	for (int i = 0; i < Tagets; i++) {
-		TargetSpawn(i, Type, RandomType, RangeStep, Score, Size);
+		TargetSpawn(i, Type, RandomType, Size, RangeStep, Score, ScoreDecay);
 	}
 }
 
 void TargetDispenser(int Type, int RandomType,
-	int RangeStep, float Score, float Size) {
+	float Size, int RangeStep, float Score, float ScoreDecay) {
 	for (int i = 0; i < TargetCnt; i++) {
 		if (!tList[i].Active) {
-			TargetSpawn(i, Type, RandomType, RangeStep, Score, Size);
+			TargetSpawn(i, Type, RandomType, Size, RangeStep, Score, ScoreDecay);
 			break;
 		}
 	}
