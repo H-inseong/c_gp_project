@@ -185,12 +185,42 @@ void render() {
                 if (tList[i].Hit && tList[i].hitRange <= j) {
                     float HitScore =
                         ScoreCaculate(tList[i].score, tList[i].RangeStep, tList[i].hitRange, (tList[i].LiveTime / 16.0f));
-                    if (tList[i].hitRange < j)
+                    if (tList[i].hitRange < j) {
+                        switch (tList[i].Type)
+                        {
+                        case 1:
+                            target_shaderProgram->setVec4("FullBrightColor",
+                                1.0f,
+                                ScoreToColor(HitScore, 10, 0, 15),
+                                ScoreToColor(HitScore, 20, 0, 15),
+                                ScoreToColor(HitScore, 0, 0, 15)
+                            );
+                            break;
+                        case 2:
+                            target_shaderProgram->setVec4("FullBrightColor",
+                                ScoreToColor(HitScore, 20, 0, 15),
+                                ScoreToColor(HitScore, 10, 0, 15),
+                                1.0f,
+                                ScoreToColor(HitScore, 0, 0, 15)
+                            );
+                            break;
+                        default:
+                            target_shaderProgram->setVec4("FullBrightColor",
+                                ScoreToColor(HitScore, -10, 20),
+                                ScoreToColor(HitScore, 10, 30),
+                                ScoreToColor(HitScore, 20),
+                                ScoreToColor(HitScore, 0)
+                            );
+                            break;
+                        }
+                    }
+                    else if (tList[i].hitRange == tList[i].RangeStep && j == tList[i].RangeStep - 1) {
                         target_shaderProgram->setVec4("FullBrightColor",
                             ScoreToColor(HitScore, 50, 0, 25),
-                            ScoreToColor(HitScore, 25, 0, 25),
+                            ScoreToColor(HitScore, 25, 0, 25) / 2.0f + 0.5f,
                             ScoreToColor(HitScore, 50, 0, 25),
                             1.0f);
+                    }
                     else
                         target_shaderProgram->setVec4("FullBrightColor", 0.0f, 1.0f, 0.0f, 1.0f);
                 }
